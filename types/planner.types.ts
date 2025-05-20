@@ -52,7 +52,10 @@ export interface Activity {
   isUpvoted: boolean;
   isDownvoted: boolean;
   upvoteCount: number;
-  downvoteCount: number;}
+  downvoteCount: number;
+  AiSummary: string;
+  AiSummaryRating: number;
+}
 
 export interface WeatherForecast {
   id: string;

@@ -42,6 +42,8 @@ export const mockititerarys: Record<string, ititerary> = {
             isDownvoted: false,
             upvoteCount: 10,
             downvoteCount: 2,
+            AiSummary: 'Visit the famous sunrise temple in Bali, known for its stunning views and spiritual significance. A must-see for any traveler to the island.',
+            AiSummaryRating: 4.8,
           },
           {
             id: 'a8',
@@ -59,6 +61,8 @@ export const mockititerarys: Record<string, ititerary> = {
             isDownvoted: false,
             upvoteCount: 20,
             downvoteCount: 5,
+            AiSummary: 'Climb the Eiffel Tower for breathtaking views of Paris. The iconic landmark offers a unique perspective of the city, especially at sunset.',
+            AiSummaryRating: 4.7,
           },
           {
             id: 'a9',
@@ -76,6 +80,8 @@ export const mockititerarys: Record<string, ititerary> = {
             isDownvoted: false,
             upvoteCount: 15,
             downvoteCount: 3,
+            AiSummary: 'Experience the beauty of Paris from the water with a Seine River cruise. Enjoy stunning views of iconic landmarks like the Eiffel Tower and Notre-Dame Cathedral.',
+            AiSummaryRating: 4.8,
           },
         ],
         weather: [
@@ -102,6 +108,8 @@ export const mockititerarys: Record<string, ititerary> = {
             isDownvoted: false,
             upvoteCount: 5,
             downvoteCount: 1,
+            AiSummary: 'Experience the vibrant street food scene in Bali, Indonesia. Taste local delicacies and explore the bustling markets with a guided tour.',
+            AiSummaryRating: 4.7,
           },
           {
             id: 'a10',
@@ -119,6 +127,8 @@ export const mockititerarys: Record<string, ititerary> = {
             isDownvoted: false,
             upvoteCount: 15,
             downvoteCount: 3,
+            AiSummary: 'Explore the world-famous Louvre Museum in Paris, home to thousands of works of art, including the Mona Lisa and the Venus de Milo. A must-visit for art lovers.',
+            AiSummaryRating: 4.8,
           },
         ],
         weather: [
@@ -145,6 +155,8 @@ export const mockititerarys: Record<string, ititerary> = {
             isDownvoted: false,
             upvoteCount: 15,
             downvoteCount: 3,
+            AiSummary: 'Relax at the beautiful beach in Bali, Indonesia. Enjoy the sun, sand, and sea while soaking up the tropical atmosphere.',
+            AiSummaryRating: 4.9,
           },
          {
             id: 'a7',
@@ -162,6 +174,8 @@ export const mockititerarys: Record<string, ititerary> = {
             isDownvoted: false,
             upvoteCount: 8,
             downvoteCount: 1,
+            AiSummary: 'Walk through the serene bamboo forest in Arashiyama, Kyoto. The towering bamboo stalks create a tranquil atmosphere, perfect for a peaceful stroll or photography.',
+            AiSummaryRating: 4.8,
           },
         ],
         weather: [
@@ -256,6 +270,8 @@ export const mockititerarys: Record<string, ititerary> = {
             isDownvoted: false,
             upvoteCount: 20,
             downvoteCount: 5,
+            AiSummary: 'Fushimi Inari Shrine is a famous Shinto shrine in Kyoto, known for its thousands of vermilion torii gates that create stunning trails up the sacred Mount Inari.',
+            AiSummaryRating: 4.9,
           },
         ],
         weather: [
@@ -282,6 +298,8 @@ export const mockititerarys: Record<string, ititerary> = {
             isDownvoted: false,
             upvoteCount: 8,
             downvoteCount: 1,
+            AiSummary: 'Walk through the serene bamboo forest in Arashiyama, Kyoto. The towering bamboo stalks create a tranquil atmosphere, perfect for a peaceful stroll or photography.',
+            AiSummaryRating: 4.8,
           },
         ],
         weather: [
@@ -308,6 +326,8 @@ export const mockititerarys: Record<string, ititerary> = {
             isDownvoted: false,
             upvoteCount: 10,
             downvoteCount: 2,
+            AiSummary: 'Experience a traditional Japanese tea ceremony in Kyoto. Learn about the history and significance of this cultural practice while enjoying matcha tea and traditional sweets.',
+            AiSummaryRating: 4.7,
           },
           {
             id: 'a9',
@@ -325,6 +345,8 @@ export const mockititerarys: Record<string, ititerary> = {
             isDownvoted: false,
             upvoteCount: 25,
             downvoteCount: 3,
+            AiSummary: 'Kinkaku-ji, also known as the Golden Pavilion, is a Zen Buddhist temple in Kyoto. It is renowned for its stunning architecture and beautiful gardens, making it a must-visit landmark.',
+            AiSummaryRating: 4.9,
           }
         ],
         weather: [

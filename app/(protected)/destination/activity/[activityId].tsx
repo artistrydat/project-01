@@ -1,73 +1,82 @@
-// app/(protected)/destination/activity/[activityId].tsx
-import React from 'react';
-import { View, Text, SafeAreaView, ScrollView, Pressable, Image, Linking } from 'react-native';
+import { 
+  View, 
+  Text, 
+  SafeAreaView, 
+  ScrollView,  
+  Image, 
+  Linking,
+  TouchableOpacity,
+} from 'react-native';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Button } from '~/components/ui';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useItineraryStore } from '~/store/itinerary/ItineraryStore';
 import type { Activity } from '~/types/planner.types';
+import {
+  LandmarkActivity,
+  FoodActivity,
+  AccommodationActivity,
+  RecreationalActivity
+} from '~/components/destination/activity-types';
+
+interface RatingVisualizerProps {
+  rating: number;
+}
+
+// Custom rating visualizer component
+const RatingVisualizer: React.FC<RatingVisualizerProps> = ({ rating }) => {
+  return (
+    <View className="flex-row items-center">
+      <View className="w-28 h-3 bg-gray-200 rounded-full overflow-hidden">
+        <View 
+          className="h-full bg-amber-400" 
+          style={{ width: `${Math.min(rating * 20, 100)}%` }} 
+        />
+      </View>
+      <Text className="ml-3 text-amber-500 font-bold">{rating.toFixed(1)}</Text>
+    </View>
+  );
+};
+
+interface AiRatingVisualizerProps {
+  rating: number;
+}
+
+// AI Summary Rating visualizer
+const AiRatingVisualizer: React.FC<AiRatingVisualizerProps> = ({ rating }) => {
+  const colors: readonly [string, string] = rating > 80 ? ['#4ADE80', '#22C55E'] : 
+                                            rating > 60 ? ['#FBBF24', '#F59E0B'] :
+                                            ['#F87171', '#EF4444'];
+                 
+  return (
+    <View className="mt-5 mb-4 bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
+      <View className="flex-row items-center justify-between mb-1.5">
+        <Text className="text-gray-700 font-semibold">AI Recommendation Score</Text>
+        <Text className="font-bold text-base" style={{color: colors[1]}}>{rating}%</Text>
+      </View>
+      <View className="h-3.5 bg-gray-200 rounded-full overflow-hidden">
+        <LinearGradient
+          colors={colors}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}
+          className="h-full rounded-full"
+          style={{ width: `${rating}%` }}
+        />
+      </View>
+    </View>
+  );
+};
 
 const ActivityTypeSection: React.FC<{ activity: Activity }> = ({ activity }) => {
   switch (activity.type) {
     case 'landmark':
-      return (
-        <View className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-          <View className="flex-row items-center mb-2">
-            <MaterialIcons name="tour" size={20} color="#F59E0B" />
-            <Text className="ml-2 font-bold text-amber-800">Landmark Spotlight</Text>
-          </View>
-          <Text className="text-amber-700">
-            This historical landmark is a must-visit location. Don&apos;t forget to check
-            the visitor guidelines before your visit.
-          </Text>
-        </View>
-      );
-      
+      return <LandmarkActivity activity={activity} />;
     case 'food':
-      return (
-        <View className="mt-4 p-4 bg-rose-50 rounded-lg border border-rose-200">
-          <View className="flex-row items-center mb-2">
-            <MaterialIcons name="restaurant" size={20} color="#E11D48" />
-            <Text className="ml-2 font-bold text-rose-800">Dining Information</Text>
-          </View>
-          <Text className="text-rose-700">
-            {activity.tags?.includes('vegetarian') && '🍃 Vegetarian options available\n'}
-            {activity.tags?.includes('vegan') && '🌱 Vegan-friendly\n'}
-            Popular local cuisine. Reservations {activity.cost > 2 ? 'recommended' : 'not required'}.
-          </Text>
-        </View>
-      );
-
+      return <FoodActivity activity={activity} />;
     case 'accommodation':
-      return (
-        <View className="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-          <View className="flex-row items-center mb-2">
-            <MaterialIcons name="hotel" size={20} color="#4F46E5" />
-            <Text className="ml-2 font-bold text-indigo-800">Stay Details</Text>
-          </View>
-          <Text className="text-indigo-700">
-            Check-in: {activity.openingHours?.[0] || '14:00'}, Check-out: {activity.openingHours?.[1] || '11:00'}\n
-            {activity.tags?.includes('wifi') && '📶 Free WiFi\n'}
-            {activity.tags?.includes('breakfast') && '☕ Breakfast included'}
-          </Text>
-        </View>
-      );
-
+      return <AccommodationActivity activity={activity} />;
     case 'activity':
-      return (
-        <View className="mt-4 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-          <View className="flex-row items-center mb-2">
-            <MaterialIcons name="directions-run" size={20} color="#059669" />
-            <Text className="ml-2 font-bold text-emerald-800">Activity Details</Text>
-          </View>
-          <Text className="text-emerald-700">
-            Duration: {activity.tags?.includes('half-day') ? '3-4 hours' : 'Full day'}\n
-            Difficulty: {activity.cost > 3 ? 'Challenging' : 'Moderate'}\n
-            Equipment: {activity.tags?.includes('rentals') ? 'Available for rent' : 'Bring your own'}
-          </Text>
-        </View>
-      );
-
+      return <RecreationalActivity activity={activity} />;
     default:
       return null;
   }
@@ -87,14 +96,19 @@ const ActivityDetails = () => {
 
   if (!activity) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
-        <Text className="text-xl mb-2">Activity not found</Text>
-        <Button 
-          label="Go Back" 
-          onPress={() => router.back()} 
-          icon="arrow-back"
-          variant="primary"
-        />
+      <SafeAreaView className="flex-1 items-center justify-center bg-gray-100">
+        <View className="bg-white p-8 rounded-3xl shadow-md w-5/6 items-center">
+          <MaterialIcons name="search-off" size={60} color="#9CA3AF" />
+          <Text className="text-2xl font-bold text-gray-800 mt-4 mb-2">Oops, Nothing Found</Text>
+          <Text className="text-gray-500 text-center mb-8">We couldn&rsquo;t find the activity you&rsquo;re looking for.</Text>
+          <TouchableOpacity 
+            className="bg-indigo-500 py-4 px-8 rounded-full flex-row items-center"
+            onPress={() => router.back()}
+          >
+            <MaterialIcons name="arrow-back" size={20} color="#FFF" />
+            <Text className="ml-2 text-white font-medium">Go Back</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
@@ -104,98 +118,173 @@ const ActivityDetails = () => {
     Linking.openURL(url);
   };
 
+  const activityTypeColors: Record<string, [string, string, string]> = {
+    'landmark': ['#FEF3C7', '#F59E0B', '#92400E'],
+    'food': ['#FEE2E2', '#EF4444', '#991B1B'],
+    'accommodation': ['#E0E7FF', '#4F46E5', '#3730A3'],
+    'activity': ['#D1FAE5', '#10B981', '#065F46']
+  };
+  
+  const colors = activityTypeColors[activity.type] || ['#F3F4F6', '#6B7280', '#374151'];
+
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-white">
       <Stack.Screen options={{ headerShown: false }} />
       
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Header Image */}
-        <View className="relative h-64">
+        {/* Enhanced Header with Gradient Overlay */}
+        <View className="relative h-80">
           <Image
             source={{ uri: activity.imageUrl }}
             className="w-full h-full"
             resizeMode="cover"
           />
-          <Pressable
-            className="absolute top-12 left-4 bg-white/90 rounded-full p-2"
-            onPress={() => router.back()}
-          >
-            <MaterialIcons name="arrow-back" size={24} color="#1E493B" />
-          </Pressable>
-        </View>
-
-        {/* Main Content */}
-        <View className="px-4 pb-8 -mt-6">
-          <View className="bg-white rounded-xl p-6 shadow-sm">
-            <Text className="text-2xl font-bold text-gray-900 mb-2">
-              {activity.name}
-            </Text>
-            <View className="flex-row justify-between mb-4">
-              <View className="flex-row items-center">
-                <MaterialIcons name="star" size={20} color="#F59E0B" />
-                <Text className="ml-1 text-gray-700">
-                  {activity.rating.toFixed(1)} ({activity.reviewsCount} reviews)
+          <LinearGradient
+            colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.7)']}
+            start={{x: 0, y: 0}}
+            end={{x: 0, y: 1}}
+            className="absolute inset-0"
+          />
+          
+          {/* Header Actions */}
+          <View className="absolute top-12 left-0 right-0 px-5 flex-row justify-between">
+            <TouchableOpacity
+              className="bg-white/95 rounded-full p-3 shadow-sm"
+              onPress={() => router.back()}
+            >
+              <MaterialIcons name="arrow-back" size={24} color={colors[1]} />
+            </TouchableOpacity>
+            {/* Type Badge */}
+            <View className="flex-row">
+              <View 
+                className="px-4 py-2 rounded-full flex-row items-center shadow-sm"
+                style={{ backgroundColor: colors[0] }}
+              >
+                <MaterialIcons 
+                  name={
+                    activity.type === 'landmark' ? 'location-city' : 
+                    activity.type === 'food' ? 'restaurant' :
+                    activity.type === 'accommodation' ? 'hotel' : 'directions-run'
+                  } 
+                  size={18} 
+                  color={colors[1]} 
+                />
+                <Text className="ml-2 font-semibold capitalize" style={{ color: colors[2] }}>
+                  {activity.type}
                 </Text>
-              </View>
-              <View className="flex-row">
-                {[...Array(4)].map((_, i) => (
-                  <MaterialIcons
-                    key={i}
-                    name={i < activity.cost ? 'attach-money' : 'money-off'}
-                    size={20}
-                    color={i < activity.cost ? '#10B981' : '#9CA3AF'}
-                  />
-                ))}
-              </View>
-            </View>
-
-            <Text className="text-gray-700 mb-6 leading-6">
-              {activity.description}
-            </Text>
-
-            <ActivityTypeSection activity={activity} />
-
-            <View className="mt-6">
-              {activity.openingHours && (
-                <View className="mb-6">
-                  <Text className="font-medium text-gray-900 mb-2">
-                    {activity.type === 'accommodation' ? 'Check-in Times' : 'Opening Hours'}
-                  </Text>
-                  <View className="flex-row items-center bg-gray-50 rounded-lg p-3">
-                    <MaterialIcons name="access-time" size={20} color="#6B7280" />
-                    <Text className="ml-2 text-gray-700">
-                      {activity.openingHours.join(' - ')}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              <View className="mb-6">
-                <Text className="font-medium text-gray-900 mb-2">Location</Text>
-                <Pressable 
-                  onPress={handleOpenMaps}
-                  className="flex-row items-center bg-gray-50 rounded-lg p-3"
-                >
-                  <MaterialIcons name="location-on" size={20} color="#EF4444" />
-                  <Text className="ml-2 text-gray-700">
-                    Open in Maps
-                  </Text>
-                </Pressable>
               </View>
             </View>
           </View>
         </View>
-      </ScrollView>
 
-      <View className="absolute bottom-6 left-0 right-0 px-4">
-        <Button
-          label={activity.type === 'accommodation' ? 'Book Now' : 'Add to Plan'}
-          onPress={() => console.log('Action triggered')}
-          icon={activity.type === 'food' ? 'restaurant' : 'add'}
-          variant="primary"
-          fullWidth
-        />
-      </View>
+        {/* Main Content - Curved Card Design */}
+        <View className="px-5 pb-10 -mt-8">
+          <View className="bg-white rounded-t-3xl p-4 pt-6 shadow-md">
+            {/* Title and Rating */}
+            <Text className="text-3xl font-bold text-gray-900 mb-3">
+              {activity.name}
+            </Text>
+            
+            <View className="flex-row items-center justify-between mb-5">
+              <View className="flex-row items-center">
+                <MaterialIcons name="star" size={22} color="#F59E0B" />
+                <Text className="ml-2 text-gray-700 font-medium">
+                  {activity.reviewsCount} reviews
+                </Text>
+              </View>
+              
+              <RatingVisualizer rating={activity.rating} />
+            </View>
+
+            {/* Description */}
+            <Text className="text-gray-700 mb-4 leading-6 text-base">
+              {activity.description}
+            </Text>
+
+            {/* Horizontal Cards Section - REDUCED VERTICAL SPACING */}
+            <View className="mb-2">
+              <Text className="font-semibold text-gray-900 mb-2">Activity Information</Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingRight: 20 }}
+                className="flex-row"
+              >
+                {/* Tags Card - MORE COMPACT */}
+                {activity.tags && activity.tags.length > 0 && (
+                  <View className="mr-3 bg-gray-50 p-3 rounded-2xl border border-gray-100" style={{ width: 220 }}>
+                    <View className="flex-row items-center mb-1">
+                      <MaterialIcons name="local-offer" size={18} color={colors[1]} />
+                      <Text className="ml-2 font-semibold text-gray-900">Tags</Text>
+                    </View>
+                    <View className="flex-row flex-wrap">
+                      {activity.tags.map((tag, index) => (
+                        <View 
+                          key={index} 
+                          className="mr-2 mb-1 px-3 py-1 rounded-full"
+                          style={{ backgroundColor: colors[0] }}
+                        >
+                          <Text style={{ color: colors[2] }} className="font-medium text-sm">#{tag}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {/* Opening Hours Card - MORE COMPACT */}
+                {activity.openingHours && (
+                  <View className="mr-3 bg-gray-50 p-3 rounded-2xl border border-gray-100" style={{ width: 220 }}>
+                    <View className="flex-row items-center mb-1">
+                      <MaterialIcons name="access-time" size={18} color={colors[1]} />
+                      <Text className="ml-2 font-semibold text-gray-900">
+                        {activity.type === 'accommodation' ? 'Check-in Times' : 'Opening Hours'}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text className="text-gray-700 font-medium">
+                        {activity.openingHours.join(' - ')}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* Location Card - MORE COMPACT */}
+                <TouchableOpacity 
+                  onPress={handleOpenMaps}
+                  className="bg-gray-50 p-3 rounded-2xl border border-gray-100"
+                  activeOpacity={0.7}
+                  style={{ width: 220 }}
+                >
+                  <View className="flex-row items-center mb-1">
+                    <MaterialIcons name="location-on" size={18} color="#EF4444" />
+                    <Text className="ml-2 font-semibold text-gray-900">Location</Text>
+                  </View>
+                  <View className="flex-row items-center">
+                    <Text className="text-gray-700 font-medium flex-1">
+                      Tap to view on maps
+                    </Text>
+                    <MaterialIcons name="arrow-forward-ios" size={16} color="#9CA3AF" />
+                  </View>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+
+            {/* Separator - TIGHTENED WITH NEGATIVE MARGIN */}
+            <View className="h-px bg-gray-100 mt-0.5" />
+
+            {/* Enhanced Activity Type Section - INCREASED NEGATIVE MARGIN */}
+            <View className="-mt-16">
+              <ActivityTypeSection activity={activity} />
+            {/* AI Rating Visualizer */}
+            {activity.AiSummaryRating && (
+              <AiRatingVisualizer rating={activity.AiSummaryRating} />
+            )}
+            </View>
+            
+
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
