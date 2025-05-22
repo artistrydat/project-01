@@ -1,151 +1,181 @@
-import React from 'react';
-import { View, Text, ScrollView, SafeAreaView, Image, Pressable } from 'react-native';
-import { Stack } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Header, BudgetOverview, EcoImpactDashboard, EmergencyButton } from '../../../components/ui';
-import { useAuth } from '~/context/AuthContext';
-import type { BudgetAlert } from '../../../types/profile.types';
-
-// Mock data for user
-const mockUser = {
-  name: 'Alex Johnson',
-  avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  location: 'Currently in Bali, Indonesia',
-  badges: ['Eco Traveler', 'Culture Explorer', 'Adventure Seeker'],
-};
-
-// Define the BudgetAlert interface
-// Mock data for budget
-const mockBudget = {
-  total: 2500,
-  spent: 1450,
-  currency: 'USD',
-  alerts: [
-    { 
-      id: '1', 
-      message: 'You\'re under budget for food by $120', 
-      type: 'positive' 
-    },
-    { 
-      id: '2', 
-      message: 'Transportation costs are 15% over budget', 
-      type: 'warning' 
-    },
-  ] as BudgetAlert[],
-};
-
-// Mock data for eco impact
-const mockEcoImpact = {
-  ecoScore: 87,
-  itineraryId: 'itin-2023-bali',
-  stats: [
-    { label: 'Carbon footprint', value: '2.3 tons CO2', icon: 'eco' },
-    { label: 'Sustainable choices', value: '68%', icon: 'thumb-up' },
-    { label: 'Local businesses supported', value: '12', icon: 'store' },
-  ],
-};
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, SafeAreaView, Pressable, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { MaterialIcons, Entypo } from '@expo/vector-icons';
+import { useAuthStore } from '~/context/AuthContext';
+import { useProfileStore, useCurrentProfile } from '~/store/ProfileStore';
+import { format } from 'date-fns';
+import ProfileHeader from '~/components/profile/ProfileHeader';
+import BadgesSection from '~/components/profile/BadgesSection';
+import InterestsCreditsSection from '~/components/profile/InterestsCreditsSection';
+import TravelJourneySection from '~/components/profile/TravelJourneySection';
+import EcoImpactSection from '~/components/profile/EcoImpactSection';
+import BudgetSection from '~/components/profile/BudgetSection';
+import TravelPreferencesSection from '~/components/profile/TravelPreferencesSection';
+import ContentTabsSection from '~/components/profile/ContentTabsSection';
 
 export default function ProfileScreen() {
-  const { user, signOut, isLoading } = useAuth();
+  const { user, signOut } = useAuthStore();
+  const { fetchProfile, isLoading } = useProfileStore();
+  const profile = useCurrentProfile();
+  const router = useRouter();
+  const [menuVisible, setMenuVisible] = useState(false);
   
-  const handleEmergencyPress = () => {
-    console.log('Emergency button pressed');
-    // Here you would implement emergency contact/services functionality
+  useEffect(() => {
+    // Use user ID from auth, or default to first profile
+    if (user?.id) {
+      fetchProfile(user.id);
+    } else {
+      fetchProfile('1'); // Default to first mock profile
+    }
+  }, [user?.id, fetchProfile]);
+  
+  const handleEditProfile = () => {
+    router.push('/(protected)/profile/EditProfile');
+  };
+
+  const handleShareProfile = () => {
+    router.push('/(protected)/profile/ShareProfile');
+  };
+
+  const handleEditPreferences = () => {
+    router.push('/(protected)/profile/OnBoarding/EditPreferences');
+  };
+  
+  const handleEditNotifications = () => {
+    setMenuVisible(false);
+    router.push('/(protected)/profile/OnBoarding/EditNotification');
+  };
+  
+  const handleEditPrivacy = () => {
+    setMenuVisible(false);
+    router.push('/(protected)/profile/OnBoarding/EditPrivacySet');
   };
 
   const handleLogout = async () => {
     try {
       await signOut();
-      // Navigation is handled within the signOut function
     } catch (error) {
       console.error('Logout failed', error);
     }
   };
+  
+  const toggleMenu = () => {
+    console.log("Toggle menu called, current state:", !menuVisible);
+    setMenuVisible(!menuVisible);
+  };
+
+  if (!profile && isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+        <Text className="text-tertiary">Loading profile...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  const memberSince = profile?.memberSince 
+    ? format(new Date(profile.memberSince), 'MMMM yyyy')
+    : 'N/A';
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-quinary">
       <Stack.Screen options={{ headerShown: false }} />
       
-      <Header title="Profile" subtitle="Manage your travel profile" />
+      {/* App Header */}
+      <View className="px-4 py-2 border-b border-gray-200 flex-row items-center bg-white">
+        <Text className="text-xl font-bold text-center flex-1 text-tertiary">profile</Text>
+        <View className="flex-row">
+          {/* Menu Button and Dropdown */}
+          <View className="relative">
+            <TouchableOpacity 
+              onPress={toggleMenu} 
+              className="p-2 mr-2"
+              activeOpacity={0.7}
+            >
+              <Entypo name="dots-three-vertical" size={20} color="#191D15" />
+            </TouchableOpacity>
+            
+            {/* Dropdown Menu - Positioned absolutely */}
+            {menuVisible && (
+              <View 
+                style={{
+                  position: 'absolute',
+                  top: 40,
+                  right: 0,
+                  width: 150,
+                  backgroundColor: 'white',
+                  borderRadius: 8,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.84,
+                  elevation: 5,
+                  zIndex: 1000
+                }}
+              >
+                <TouchableOpacity 
+                  onPress={handleEditNotifications}
+                  style={{
+                    padding: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#f0f0f0'
+                  }}
+                >
+                  <Text style={{ color: '#191D15' }}>Notifications</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={handleEditPrivacy}
+                  style={{ padding: 12 }}
+                >
+                  <Text style={{ color: '#191D15' }}>Privacy</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+          
+          <Pressable onPress={handleLogout} className="p-2">
+            <MaterialIcons name="logout" size={24} color="#191D15" />
+          </Pressable>
+        </View>
+      </View>
       
+      {/* Profile Content */}
       <ScrollView 
-        className="flex-1 px-4" 
+        className="flex-1" 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 30 }}
       >
-        {/* User Profile Card */}
-        <View className="bg-indigo-600 rounded-xl p-4 mb-6">
-          <View className="flex-row items-center">
-            <Image
-              source={{ uri: user?.avatar || mockUser.avatar }}
-              className="w-16 h-16 rounded-full border-2 border-white"
-            />
-            
-            <View className="ml-3 flex-1">
-              <Text className="text-white text-xl font-bold">{user?.name || mockUser.name}</Text>
-              <Text className="text-indigo-200">{mockUser.location}</Text>
-              
-              <View className="flex-row flex-wrap mt-2">
-                {mockUser.badges.map((badge, index) => (
-                  <View 
-                    key={index} 
-                    className="bg-indigo-800/50 rounded-full px-2 py-1 mr-2 mb-1"
-                  >
-                    <Text className="text-white text-xs">{badge}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          </View>
-        </View>
+        <ProfileHeader 
+          profile={profile} 
+          memberSince={memberSince}
+          onEditProfile={handleEditProfile}
+          onShareProfile={handleShareProfile}
+        />
         
-        {/* Budget Section */}
-        <View className="mb-6">
-          <Text className="text-lg font-semibold mb-2">Budget Overview</Text>
-          <BudgetOverview 
-            total={mockBudget.total} 
-            spent={mockBudget.spent} 
-            alerts={mockBudget.alerts} 
-          />
-        </View>
-        
-        {/* Eco Impact Section */}
-        <View className="mb-6">
-          <Text className="text-lg font-semibold mb-2">Eco Impact</Text>
-          <EcoImpactDashboard 
-            ecoScore={mockEcoImpact.ecoScore} 
-            itineraryId={mockEcoImpact.itineraryId} 
-          />
-        </View>
-        
-        {/* Settings Buttons */}
-        <View className="space-y-3">
-          <Pressable className="flex-row items-center px-4 py-3 bg-gray-100 rounded-xl">
-            <MaterialIcons name="settings" size={20} color="#4F46E5" />
-            <Text className="text-gray-800 ml-3">Settings</Text>
-            <MaterialIcons name="chevron-right" size={20} color="#666" style={{ marginLeft: 'auto' }} />
-          </Pressable>
-          
-          <Pressable className="flex-row items-center px-4 py-3 bg-gray-100 rounded-xl">
-            <MaterialIcons name="help-outline" size={20} color="#4F46E5" />
-            <Text className="text-gray-800 ml-3">Help & Support</Text>
-            <MaterialIcons name="chevron-right" size={20} color="#666" style={{ marginLeft: 'auto' }} />
-          </Pressable>
-          
-          <Pressable 
-            className="flex-row items-center px-4 py-3 bg-gray-100 rounded-xl"
-            onPress={handleLogout}
-            disabled={isLoading}
-          >
-            <MaterialIcons name="logout" size={20} color="#F43F5E" />
-            <Text className="text-red-500 ml-3">{isLoading ? 'Logging out...' : 'Logout'}</Text>
-          </Pressable>
-        </View>
+        {/* Rest of profile content... */}
+        <BadgesSection badges={profile?.badges} />
+        <InterestsCreditsSection interests={profile?.interests} credits={profile?.credits} />
+        <TravelJourneySection travelHistory={profile?.travelHistory} travelGoals={profile?.travelGoals} />
+        <EcoImpactSection ecoImpact={profile?.EcoImpact} />
+        <BudgetSection budget={profile?.budget} />
+        <TravelPreferencesSection travelPreferences={profile?.travelPreferences} onEditPreferences={handleEditPreferences} />
+        <ContentTabsSection itineraries={profile?.itineraries} />
       </ScrollView>
       
-      <View className="absolute bottom-8 right-8">
-        <EmergencyButton onPress={handleEmergencyPress} />
-      </View>
+      {/* Overlay to close menu when clicking elsewhere */}
+      {menuVisible && (
+        <TouchableWithoutFeedback onPress={() => setMenuVisible(false)}>
+          <View style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: 'transparent',
+            zIndex: 10
+          }} />
+        </TouchableWithoutFeedback>
+      )}
     </SafeAreaView>
   );
 }

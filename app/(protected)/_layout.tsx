@@ -16,6 +16,26 @@ export default function ProtectedLayout() {
         name="chat-room/[id]" 
         options={{ headerShown: false }} 
       />
+      <Stack.Screen 
+        name="profile/EditProfile" 
+        options={{ presentation: 'modal', headerShown: false }} 
+      />
+       <Stack.Screen 
+        name="profile/ShareProfile" 
+        options={{ presentation: 'modal', headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="profile/OnBoarding/EidtPreferences" 
+        options={{ presentation: 'modal', headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="profile/OnBoarding/EidtNotification" 
+        options={{ presentation: 'modal', headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="profile/OnBoarding/EidtPrivacySet" 
+        options={{ presentation: 'modal', headerShown: false }} 
+      />
     </Stack>
   );
 }

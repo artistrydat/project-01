@@ -1,6 +1,7 @@
 //Mock data for itinerary
 import type { ititerary } from './planner.types';
 
+
 export const mockititerarys: Record<string, ititerary> = {
   'it1': {
     ititeraryId: 'it1',
