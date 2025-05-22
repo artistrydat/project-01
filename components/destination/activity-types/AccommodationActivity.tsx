@@ -49,15 +49,6 @@ const AccommodationActivity: React.FC<AccommodationActivityProps> = ({ activity 
           ))}
         </View>
         
-        {/* Tags Section */}
-        <View className="flex-row flex-wrap mb-3">
-          {activity.tags.map((tag, index) => (
-            <View key={index} className="bg-indigo-200 rounded-full px-3 py-1 mr-2 mb-2">
-              <Text className="text-indigo-800 text-xs font-medium">#{tag}</Text>
-            </View>
-          ))}
-        </View>
-        
         {/* Action Buttons */}
         <View className="flex-row justify-between">
           <Pressable className="bg-white rounded-full px-4 py-2 flex-row items-center border border-indigo-200">

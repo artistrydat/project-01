@@ -30,32 +30,6 @@ const FoodActivity: React.FC<FoodActivityProps> = ({ activity }) => {
       <View className="bg-rose-50 p-4">
         <Text className="text-rose-900 leading-6 mb-3">{activity.AiSummary}</Text>
         
-        {/* Info Pills */}
-        <View className="flex-row flex-wrap mb-4">
-          <View className="bg-white rounded-full px-3 py-1 mr-2 mb-2 flex-row items-center border border-rose-200">
-            <MaterialIcons name="star" size={16} color="#E11D48" />
-            <Text className="ml-1 text-rose-700 text-xs font-medium">
-              {activity.rating.toFixed(1)} ({activity.reviewsCount})
-            </Text>
-          </View>
-          
-          <View className="bg-white rounded-full px-3 py-1 mr-2 mb-2 flex-row items-center border border-rose-200">
-            <MaterialIcons name="schedule" size={16} color="#E11D48" />
-            <Text className="ml-1 text-rose-700 text-xs font-medium">
-              {activity.openingHours[0]}
-            </Text>
-          </View>
-        </View>
-        
-        {/* Tags Section */}
-        <View className="flex-row flex-wrap mb-3">
-          {activity.tags.map((tag, index) => (
-            <View key={index} className="bg-rose-200 rounded-full px-3 py-1 mr-2 mb-2">
-              <Text className="text-rose-800 text-xs font-medium">#{tag}</Text>
-            </View>
-          ))}
-        </View>
-        
         {/* Action Buttons */}
         <View className="flex-row justify-between">
           <Pressable className="bg-white rounded-full px-4 py-2 flex-row items-center border border-rose-200">

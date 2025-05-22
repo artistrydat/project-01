@@ -27,14 +27,6 @@ const LandmarkActivity: React.FC<LandmarkActivityProps> = ({ activity }) => {
       <View className="bg-amber-50 p-4">
         <Text className="text-amber-900 leading-6 mb-3">{activity.AiSummary}</Text>
         
-        {/* Tags Section */}
-        <View className="flex-row flex-wrap mb-3">
-          {activity.tags.map((tag, index) => (
-            <View key={index} className="bg-amber-200 rounded-full px-3 py-1 mr-2 mb-2">
-              <Text className="text-amber-800 text-xs font-medium">#{tag}</Text>
-            </View>
-          ))}
-        </View>
         
         {/* Action Buttons */}
         <View className="flex-row justify-between">
