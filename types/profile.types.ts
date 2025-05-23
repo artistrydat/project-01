@@ -80,12 +80,11 @@ export interface Budget {
 
 export interface EcoImpactStat {
   label: string;
-  value: string;
-  icon: string;
+  value: number;
 }
 
 export interface EcoImpact {
   ecoScore: number;
-  itineraryId: string;
+  itineraryId: string[];
   stats: EcoImpactStat[];
 }

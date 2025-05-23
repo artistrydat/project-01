@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useProfileStore, useCurrentProfile } from '~/store/ProfileStore';
 
 export default function EditProfile() {
@@ -19,7 +20,6 @@ export default function EditProfile() {
   
   // Input fields for array items
   const [newInterest, setNewInterest] = useState('');
-  const [newFriend, setNewFriend] = useState('');
   const [newTravelHistory, setNewTravelHistory] = useState('');
   const [newTravelGoal, setNewTravelGoal] = useState('');
   
@@ -34,6 +34,35 @@ export default function EditProfile() {
     }
   }, [profile]);
 
+  const pickImage = async () => {
+    // Request permission to access the media library
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission Required',
+        'Sorry, we need camera roll permissions to change your profile picture.'
+      );
+      return;
+    }
+
+    // Launch the image library with the correct API
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes:  ['images', 'videos'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      // Update the form data with the selected image URI
+      setFormData({
+        ...formData,
+        avatar: result.assets[0].uri
+      });
+    }
+  };
+
   const handleSave = () => {
     if (profile && profile.id) {
       updateProfile(profile.id, formData);
@@ -44,99 +73,137 @@ export default function EditProfile() {
   // Early return if profile is not loaded
   if (!profile || !profile.id) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-50 items-center justify-center">
+      <SafeAreaView className="flex-1 bg-quinary items-center justify-center">
         <Text>Loading profile...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-quinary">
       <Stack.Screen options={{ headerShown: false }} />
       
       {/* Header */}
-      <View className="px-4 py-5 border-b border-gray-200 flex-row items-center">
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color="#333" />
+      <View className="px-5 py-4 border-b border-primary/50 flex-row items-center">
+        <TouchableOpacity 
+          className="bg-primary/20 p-2 rounded-full shadow-sm backdrop-blur-lg" 
+          onPress={() => router.back()}
+        >
+          <MaterialIcons name="arrow-back" size={22} color="#1E493B" />
         </TouchableOpacity>
-        <Text className="text-xl font-medium text-center flex-1">Edit profile</Text>
-        <View style={{ width: 24 }} />
+        <Text className="text-xl font-bold text-center flex-1 ml-2 text-tertiary">Edit Your Vibe ✨</Text>
+        <View style={{ width: 34 }} />
       </View>
       
-      <ScrollView className="flex-1 px-4 pt-4">
+      <ScrollView className="flex-1 px-5 pt-6">
         {/* Profile Picture */}
-        <View className="items-center mb-6">
+        <View className="items-center mb-8">
           <View className="relative">
             <Image 
-              source={{ uri: formData.avatar }} 
-              className="w-28 h-28 rounded-full"
+              source={{ uri: formData.avatar || 'https://via.placeholder.com/150' }} 
+              className="w-32 h-32 rounded-full border-4 border-primary/80 shadow-xl"
             />
             <TouchableOpacity 
-              className="absolute bottom-0 right-0 bg-white rounded-full p-2 border border-gray-200"
-              onPress={() => console.log('Change profile picture')}
+              className="absolute bottom-0 right-0 bg-quaternary rounded-full p-3 shadow-md"
+              onPress={pickImage}
             >
-              <MaterialIcons name="edit" size={20} color="#333" />
+              <MaterialIcons name="camera-alt" size={18} color="white" />
             </TouchableOpacity>
           </View>
-          <Text className="text-teal-500 mt-2">Change profile picture</Text>
+          <TouchableOpacity 
+            className="mt-3 px-5 py-2 bg-primary/30 rounded-full backdrop-blur-sm" 
+            onPress={pickImage}
+          >
+            <Text className="text-quaternary font-semibold">Update photo</Text>
+          </TouchableOpacity>
         </View>
         
         {/* Profile Form */}
-        <View className="space-y-6">
-          {/* Name */}
-          <View>
-            <Text className="text-gray-700 mb-1">Name</Text>
-            <TextInput
-              className="border-b border-gray-300 py-2 text-base text-gray-800"
-              value={formData.name}
-              onChangeText={(text) => setFormData({...formData, name: text})}
-            />
-          </View>
-          
-          {/* Username */}
-          <View>
-            <Text className="text-gray-700 mb-1">Username</Text>
-            <TextInput
-              className="border-b border-gray-300 py-2 text-base text-gray-800"
-              value={formData.username}
-              onChangeText={(text) => setFormData({...formData, username: text})}
-            />
+        <View className="space-y-7">
+          {/* Name and Username Row */}
+          <View className="flex-row space-x-3">
+            {/* Name */}
+            <View className="flex-1">
+              <Text className="text-quaternary font-semibold mb-2 flex-row items-center">
+                <MaterialIcons name="person" size={16} color="#1E493B" style={{marginRight: 4}} />
+                Name
+              </Text>
+              <TextInput
+                className="border border-primary rounded-xl py-3 px-4 text-base text-tertiary bg-primary/10 shadow-sm"
+                value={formData.name}
+                onChangeText={(text) => setFormData({...formData, name: text})}
+                placeholder="Your name"
+                placeholderTextColor="#1E493B50"
+              />
+            </View>
+            
+            {/* Username */}
+            <View className="flex-1">
+              <Text className="text-quaternary font-semibold mb-2 flex-row items-center">
+                <MaterialIcons name="alternate-email" size={16} color="#1E493B" style={{marginRight: 4}} />
+                Username
+              </Text>
+              <TextInput
+                className="border border-primary rounded-xl py-3 px-4 text-base text-tertiary bg-primary/10 shadow-sm"
+                value={formData.username}
+                onChangeText={(text) => setFormData({...formData, username: text})}
+                placeholder="@username"
+                placeholderTextColor="#1E493B50"
+              />
+            </View>
           </View>
           
           {/* Bio */}
           <View>
-            <Text className="text-gray-700 mb-1">Bio</Text>
+            <Text className="text-quaternary font-semibold mb-2 flex-row items-center">
+              <MaterialIcons name="text-snippet" size={16} color="#1E493B" style={{marginRight: 4}} />
+              Bio
+            </Text>
             <TextInput
-              className="border-b border-gray-300 py-2 text-base text-gray-800"
+              className="border border-primary rounded-xl py-3 px-4 text-base text-tertiary min-h-[80px] bg-primary/10 shadow-sm"
               value={formData.bio}
               onChangeText={(text) => setFormData({...formData, bio: text})}
               multiline
-              numberOfLines={3}
+              numberOfLines={4}
+              placeholder="Tell your story..."
+              placeholderTextColor="#1E493B50"
+              textAlignVertical="top"
             />
+          </View>
+
+          {/* Section divider */}
+          <View className="flex-row items-center py-2">
+            <View className="flex-1 h-[1px] bg-primary" />
+            <Text className="px-4 text-quaternary font-semibold">YOUR VIBE</Text>
+            <View className="flex-1 h-[1px] bg-primary" />
           </View>
           
           {/* Interests */}
           <View>
-            <Text className="text-gray-700 mb-1">Interests</Text>
-            <View className="flex-row flex-wrap mb-2">
+            <Text className="text-quaternary font-semibold mb-2 flex-row items-center">
+              <MaterialIcons name="local-fire-department" size={16} color="#1E493B" style={{marginRight: 4}} />
+              Interests
+            </Text>
+            <View className="flex-row flex-wrap mb-3">
               {profile.interests?.map((interest, index) => (
-                <View key={index} className="bg-teal-100 rounded-full px-3 py-1 m-1 flex-row items-center">
-                  <Text className="text-teal-800">{interest}</Text>
+                <View key={index} className="bg-primary rounded-full px-3 py-1.5 m-1 flex-row items-center shadow-sm">
+                  <Text className="text-tertiary font-medium">{interest}</Text>
                   <TouchableOpacity onPress={() => removeArrayItem(profile.id, 'interests', index)} className="ml-1">
-                    <MaterialIcons name="close" size={16} color="#115E59" />
+                    <MaterialIcons name="close" size={16} color="#1E493B" />
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
-            <View className="flex-row items-center">
+            <View className="flex-row items-center bg-primary/10 rounded-xl shadow-sm overflow-hidden border border-primary">
               <TextInput
-                className="border-b border-gray-300 py-2 text-base text-gray-800 flex-1"
+                className="py-3 px-4 text-base text-tertiary flex-1"
                 value={newInterest}
                 onChangeText={setNewInterest}
                 placeholder="Add an interest"
+                placeholderTextColor="#1E493B50"
               />
               <TouchableOpacity 
-                className="ml-2 bg-teal-500 p-2 rounded-full"
+                className="bg-quaternary p-3 m-1 rounded-lg"
                 onPress={() => {
                   if (newInterest.trim()) {
                     addArrayItem(profile.id, 'interests', newInterest);
@@ -149,62 +216,32 @@ export default function EditProfile() {
             </View>
           </View>
           
-          {/* Friends */}
-          <View>
-            <Text className="text-gray-700 mb-1">Friends</Text>
-            <View className="flex-row flex-wrap mb-2">
-              {profile.friends?.map((friend, index) => (
-                <View key={index} className="bg-indigo-100 rounded-full px-3 py-1 m-1 flex-row items-center">
-                  <Text className="text-indigo-800">{friend}</Text>
-                  <TouchableOpacity onPress={() => removeArrayItem(profile.id, 'friends', index)} className="ml-1">
-                    <MaterialIcons name="close" size={16} color="#4F46E5" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-            <View className="flex-row items-center">
-              <TextInput
-                className="border-b border-gray-300 py-2 text-base text-gray-800 flex-1"
-                value={newFriend}
-                onChangeText={setNewFriend}
-                placeholder="Add a friend"
-              />
-              <TouchableOpacity 
-                className="ml-2 bg-indigo-500 p-2 rounded-full"
-                onPress={() => {
-                  if (newFriend.trim()) {
-                    addArrayItem(profile.id, 'friends', newFriend);
-                    setNewFriend('');
-                  }
-                }}
-              >
-                <MaterialIcons name="add" size={20} color="white" />
-              </TouchableOpacity>
-            </View>
-          </View>
-          
           {/* Travel History */}
           <View>
-            <Text className="text-gray-700 mb-1">Travel History</Text>
-            <View className="flex-row flex-wrap mb-2">
+            <Text className="text-quaternary font-semibold mb-2 flex-row items-center">
+              <MaterialCommunityIcons name="map-marker-check" size={16} color="#1E493B" style={{marginRight: 4}} />
+              Travel History
+            </Text>
+            <View className="flex-row flex-wrap mb-3">
               {profile.travelHistory?.map((place, index) => (
-                <View key={index} className="bg-amber-100 rounded-full px-3 py-1 m-1 flex-row items-center">
-                  <Text className="text-amber-800">{place}</Text>
+                <View key={index} className="bg-secondary/70 rounded-full px-3 py-1.5 m-1 flex-row items-center">
+                  <Text className="text-tertiary font-medium">{place}</Text>
                   <TouchableOpacity onPress={() => removeArrayItem(profile.id, 'travelHistory', index)} className="ml-1">
-                    <MaterialIcons name="close" size={16} color="#92400E" />
+                    <MaterialIcons name="close" size={16} color="#191D15" />
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
-            <View className="flex-row items-center">
+            <View className="flex-row items-center bg-secondary/10 rounded-xl shadow-sm overflow-hidden border border-secondary/50">
               <TextInput
-                className="border-b border-gray-300 py-2 text-base text-gray-800 flex-1"
+                className="py-3 px-4 text-base text-tertiary flex-1"
                 value={newTravelHistory}
                 onChangeText={setNewTravelHistory}
                 placeholder="Add a visited place"
+                placeholderTextColor="#1E493B50"
               />
               <TouchableOpacity 
-                className="ml-2 bg-amber-500 p-2 rounded-full"
+                className="bg-secondary p-3 m-1 rounded-lg"
                 onPress={() => {
                   if (newTravelHistory.trim()) {
                     addArrayItem(profile.id, 'travelHistory', newTravelHistory);
@@ -212,33 +249,37 @@ export default function EditProfile() {
                   }
                 }}
               >
-                <MaterialIcons name="add" size={20} color="white" />
+                <MaterialIcons name="add" size={20} color="#191D15" />
               </TouchableOpacity>
             </View>
           </View>
           
           {/* Travel Goals */}
           <View>
-            <Text className="text-gray-700 mb-1">Travel Goals</Text>
-            <View className="flex-row flex-wrap mb-2">
+            <Text className="text-quaternary font-semibold mb-2 flex-row items-center">
+              <MaterialCommunityIcons name="map-marker-path" size={16} color="#1E493B" style={{marginRight: 4}} />
+              Travel Goals
+            </Text>
+            <View className="flex-row flex-wrap mb-3">
               {profile.travelGoals?.map((goal, index) => (
-                <View key={index} className="bg-emerald-100 rounded-full px-3 py-1 m-1 flex-row items-center">
-                  <Text className="text-emerald-800">{goal}</Text>
+                <View key={index} className="bg-primary/60 rounded-full px-3 py-1.5 m-1 flex-row items-center">
+                  <Text className="text-tertiary font-medium">{goal}</Text>
                   <TouchableOpacity onPress={() => removeArrayItem(profile.id, 'travelGoals', index)} className="ml-1">
-                    <MaterialIcons name="close" size={16} color="#047857" />
+                    <MaterialIcons name="close" size={16} color="#1E493B" />
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
-            <View className="flex-row items-center">
+            <View className="flex-row items-center bg-primary/10 rounded-xl shadow-sm overflow-hidden border border-primary/50">
               <TextInput
-                className="border-b border-gray-300 py-2 text-base text-gray-800 flex-1"
+                className="py-3 px-4 text-base text-tertiary flex-1"
                 value={newTravelGoal}
                 onChangeText={setNewTravelGoal}
                 placeholder="Add a travel goal"
+                placeholderTextColor="#1E493B50"
               />
               <TouchableOpacity 
-                className="ml-2 bg-emerald-500 p-2 rounded-full"
+                className="bg-quaternary p-3 m-1 rounded-lg"
                 onPress={() => {
                   if (newTravelGoal.trim()) {
                     addArrayItem(profile.id, 'travelGoals', newTravelGoal);
@@ -251,38 +292,40 @@ export default function EditProfile() {
             </View>
           </View>
           
-          {/* Premium Status - Non-editable */}
+          {/* Premium Status - Enhanced */}
           {profile?.isPremium && (
-            <View className="bg-yellow-50 p-4 rounded-lg mt-6">
+            <View className="bg-secondary/20 p-5 rounded-xl mt-6 shadow-sm border border-secondary border-opacity-40 backdrop-blur-sm">
               <View className="flex-row items-center">
-                <MaterialIcons name="star" size={24} color="#F59E0B" />
-                <Text className="ml-2 text-lg font-medium">Premium Account</Text>
+                <MaterialIcons name="star" size={24} color="#E3AF00" />
+                <Text className="ml-2 text-lg font-bold text-tertiary">Premium Account</Text>
               </View>
-              <Text className="text-gray-600 mt-1">You have access to all premium features</Text>
+              <Text className="text-quaternary mt-1">You have access to all premium features</Text>
             </View>
           )}
           
-          {/* Newsletter Status - Non-editable */}
+          {/* Newsletter Status */}
           {profile?.isSubscribed && (
-            <View className="bg-green-50 p-4 rounded-lg">
+            <View className="bg-primary/20 p-4 rounded-lg border border-primary border-opacity-40 backdrop-blur-sm">
               <View className="flex-row items-center">
-                <MaterialIcons name="check-circle" size={24} color="#10B981" />
-                <Text className="ml-2 text-lg font-medium">Subscribed</Text>
+                <MaterialIcons name="check-circle" size={24} color="#1E493B" />
+                <Text className="ml-2 text-lg font-medium text-tertiary">Subscribed</Text>
               </View>
-              <Text className="text-gray-600 mt-1">You&rsquo;re subscribed to our newsletter</Text>
+              <Text className="text-quaternary mt-1">You&rsquo;re subscribed to our newsletter</Text>
             </View>
           )}
-        </View>
-        
-        {/* Save Button */}
-        <View className="my-8">
-          <TouchableOpacity
-            className="bg-teal-500 py-4 rounded-full items-center"
-            onPress={handleSave}
-            disabled={isLoading}
-          >
-            <Text className="text-white font-bold text-lg">{isLoading ? 'Saving...' : 'Save Changes'}</Text>
-          </TouchableOpacity>
+          
+          {/* Save Button */}
+          <View className="my-8">
+            <TouchableOpacity
+              className="bg-quaternary py-4 rounded-xl items-center shadow-lg"
+              onPress={handleSave}
+              disabled={isLoading}
+            >
+              <Text className="text-quinary font-bold text-lg">
+                {isLoading ? 'Saving...' : 'Save Your Vibe ✨'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -10,7 +10,7 @@ export default function InterestsCreditsSection({ interests, credits }: Interest
   return (
     <View className="px-4 mb-6 flex-row">
       {/* Interests */}
-      <View className="flex-1 bg-quaternary rounded-xl p-4 mr-2">
+      <View className="flex-1 bg-secondary rounded-xl p-4 mr-2">
         <Text className="text-sm font-semibold mb-2 text-tertiary">Interests</Text>
         <View className="flex-row flex-wrap">
           {interests && interests.length > 0 ? (

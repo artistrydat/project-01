@@ -92,7 +92,7 @@ export default function ProfileScreen() {
               className="p-2 mr-2"
               activeOpacity={0.7}
             >
-              <Entypo name="dots-three-vertical" size={20} color="#191D15" />
+              <Entypo name="dots-three-vertical" size={20} color="#1E493B" />
             </TouchableOpacity>
             
             {/* Dropdown Menu - Positioned absolutely */}
@@ -134,7 +134,7 @@ export default function ProfileScreen() {
           </View>
           
           <Pressable onPress={handleLogout} className="p-2">
-            <MaterialIcons name="logout" size={24} color="#191D15" />
+            <MaterialIcons name="logout" size={24} color="#1E493B" />
           </Pressable>
         </View>
       </View>

@@ -58,7 +58,7 @@ export default function ProfileHeader({
       <Text className="text-tertiary mb-4 italic">{profile.bio || "No bio yet"}</Text>
       
       {/* Stats Row */}
-      <View className="flex-row justify-around bg-white rounded-xl p-3 shadow-sm">
+      <View className="flex-row justify-around bg-secondary rounded-xl p-3 shadow-sm">
         <View className="items-center">
           <Text className="text-xl font-bold text-tertiary">{profile.stats?.posts || 0}</Text>
           <Text className="text-gray-600 text-xs">Trips</Text>

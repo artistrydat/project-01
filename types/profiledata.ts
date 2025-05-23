@@ -30,22 +30,19 @@ export const mockUserProfile: Record<string,UserProfile> = {
   travelGoals: ['Bali', 'Sydney', 'Cape Town'],
   EcoImpact: {
     ecoScore: 85,
-    itineraryId: '1',
+    itineraryId: ['it1'],
     stats: [
       {
         label: 'Carbon Footprint',
-        value: '2.5 tons',
-        icon: 'energy-savings-leaf',
+        value: 2.5,
       },
       {
         label: 'Water Usage',
-        value: '1500 liters',
-        icon: 'water-drop',
+        value: 1500,
       },
       {
         label: 'Waste Generated',
-        value: '50 kg',
-        icon: 'restore-from-trash',
+        value: 50,
       },
     ],
   },
@@ -130,22 +127,19 @@ notifications: {
   travelGoals: ['Bali', 'Sydney', 'Cape Town'],
   EcoImpact: {
     ecoScore: 75,
-    itineraryId: '2',
+    itineraryId: ['it2'],
     stats: [
       {
         label: 'Carbon Footprint',
-        value: '3.0 tons',
-        icon: 'energy-savings-leaf',
+        value: 3.0,
       },
       {
         label: 'Water Usage',
-        value: '2000 liters',
-        icon: 'water-drop',
+        value: 2000,
       },
       {
         label: 'Waste Generated',
-        value: '60 kg',
-        icon: 'restore-from-trash',
+        value: 60,
       },
     ],
   },
@@ -230,22 +224,19 @@ notifications: {
   travelGoals: ['Bali', 'Sydney', 'Cape Town'],
   EcoImpact: {
     ecoScore: 90,
-    itineraryId: '3',
+    itineraryId: ['it2'],
     stats: [
       {
         label: 'Carbon Footprint',
-        value: '2.0 tons',
-        icon: 'energy-savings-leaf',
+        value: 2,
       },
       {
         label: 'Water Usage',
-        value: '1200 liters',
-        icon: 'water-drop',
+        value: 1200,
       },
       {
         label: 'Waste Generated',
-        value: '40 kg',
-        icon: 'restore-from-trash',
+        value: 40,
       },
     ],
   },
