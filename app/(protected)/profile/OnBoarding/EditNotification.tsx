@@ -1,12 +1,19 @@
 import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Switch, Alert } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
 import { useProfileStore, useCurrentProfile } from '~/store/ProfileStore';
 
 const EditNotification = () => {
+  const router = useRouter();
   const currentProfile = useCurrentProfile();
   const { updateNotificationSettings } = useProfileStore();
   
   if (!currentProfile || !currentProfile.notifications) {
-    return <div>Loading...</div>;
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text>Loading...</Text>
+      </View>
+    );
   }
   
   const handleToggle = (setting: keyof typeof currentProfile.notifications) => {
@@ -17,88 +24,99 @@ const EditNotification = () => {
       );
     }
   };
+  
+  const handleSavePreferences = () => {
+    Alert.alert(
+      "Preferences Saved",
+      "Your notification preferences have been successfully updated.",
+      [
+        { 
+          text: "OK", 
+          onPress: () => router.replace('/(protected)/(tabs)/profile')
+        }
+      ]
+    );
+  };
 
   return (
-    <div className="p-4 max-w-md mx-auto bg-white rounded-xl shadow-md">
-      <h2 className="text-xl font-bold mb-4">Notification Preferences</h2>
-      <p className="text-gray-600 mb-6">
-        Choose which notifications you&rsquo;d like to receive
-      </p>
+    <ScrollView className="flex-1 bg-white">
+      <Stack.Screen options={{ title: "Notification Settings" }} />
       
-      <div className="space-y-4">
-        <NotificationItem
-          label="New Messages"
-          description="Get notified when you receive new messages"
-          checked={currentProfile.notifications.newMessages}
-          onChange={() => handleToggle('newMessages')}
-        />
+      <View className="p-4">
+        <Text className="text-xl font-bold mb-4 text-tertiary">Notification Preferences</Text>
+        <Text className="text-gray-600 mb-6">
+          Choose which notifications you&rsquo;d like to receive
+        </Text>
         
-        <NotificationItem
-          label="Itinerary Updates"
-          description="Receive updates about changes to your travel plans"
-          checked={currentProfile.notifications.itineraryUpdates}
-          onChange={() => handleToggle('itineraryUpdates')}
-        />
+        <View className="space-y-4">
+          <NotificationItem
+            label="New Messages"
+            description="Get notified when you receive new messages"
+            value={currentProfile.notifications.newMessages}
+            onToggle={() => handleToggle('newMessages')}
+          />
+          
+          <NotificationItem
+            label="Itinerary Updates"
+            description="Receive updates about changes to your travel plans"
+            value={currentProfile.notifications.itineraryUpdates}
+            onToggle={() => handleToggle('itineraryUpdates')}
+          />
+          
+          <NotificationItem
+            label="Friend Requests"
+            description="Get notified about new friend requests"
+            value={currentProfile.notifications.friendRequests}
+            onToggle={() => handleToggle('friendRequests')}
+          />
+          
+          <NotificationItem
+            label="Travel Deals"
+            description="Receive personalized travel offers and deals"
+            value={currentProfile.notifications.travelDeals}
+            onToggle={() => handleToggle('travelDeals')}
+          />
+          
+          <NotificationItem
+            label="Eco Impact Updates"
+            description="Get updates about your environmental impact"
+            value={currentProfile.notifications.ecoImpactUpdates}
+            onToggle={() => handleToggle('ecoImpactUpdates')}
+          />
+        </View>
         
-        <NotificationItem
-          label="Friend Requests"
-          description="Get notified about new friend requests"
-          checked={currentProfile.notifications.friendRequests}
-          onChange={() => handleToggle('friendRequests')}
-        />
-        
-        <NotificationItem
-          label="Travel Deals"
-          description="Receive personalized travel offers and deals"
-          checked={currentProfile.notifications.travelDeals}
-          onChange={() => handleToggle('travelDeals')}
-        />
-        
-        <NotificationItem
-          label="Eco Impact Updates"
-          description="Get updates about your environmental impact"
-          checked={currentProfile.notifications.ecoImpactUpdates}
-          onChange={() => handleToggle('ecoImpactUpdates')}
-        />
-      </div>
-      
-      <div className="mt-8">
-        <button 
-          className="w-full py-2 px-4 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700"
+        <TouchableOpacity 
+          className="mt-8 w-full py-2 px-4 bg-green-600 rounded-lg"
+          onPress={handleSavePreferences}
         >
-          Save Preferences
-        </button>
-      </div>
-    </div>
+          <Text className="text-white font-semibold text-center">Save Preferences</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 };
 
 interface NotificationItemProps {
   label: string;
   description: string;
-  checked: boolean;
-  onChange: () => void;
+  value: boolean;
+  onToggle: () => void;
 }
 
-const NotificationItem = ({ label, description, checked, onChange }: NotificationItemProps) => {
+const NotificationItem = ({ label, description, value, onToggle }: NotificationItemProps) => {
   return (
-    <div className="flex items-start">
-      <div className="flex items-center h-5">
-        <input
-          id={label.replace(/\s+/g, '-').toLowerCase()}
-          type="checkbox"
-          checked={checked}
-          onChange={onChange}
-          className="h-4 w-4 text-green-600 border-gray-300 rounded"
-        />
-      </div>
-      <div className="ml-3 text-sm">
-        <label htmlFor={label.replace(/\s+/g, '-').toLowerCase()} className="font-medium text-gray-700">
-          {label}
-        </label>
-        <p className="text-gray-500">{description}</p>
-      </div>
-    </div>
+    <View className="flex-row items-start">
+      <View className="flex-1">
+        <Text className="font-medium text-gray-700">{label}</Text>
+        <Text className="text-gray-500">{description}</Text>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onToggle}
+        trackColor={{ false: '#d1d5db', true: '#10b981' }}
+        thumbColor="#ffffff"
+      />
+    </View>
   );
 };
 

@@ -25,15 +25,15 @@ export default function ProtectedLayout() {
         options={{ presentation: 'modal', headerShown: false }} 
       />
       <Stack.Screen 
-        name="profile/OnBoarding/EidtPreferences" 
+        name="profile/OnBoarding/EditPreferences" 
         options={{ presentation: 'modal', headerShown: false }} 
       />
       <Stack.Screen 
-        name="profile/OnBoarding/EidtNotification" 
+        name="profile/OnBoarding/EditNotification" 
         options={{ presentation: 'modal', headerShown: false }} 
       />
       <Stack.Screen 
-        name="profile/OnBoarding/EidtPrivacySet" 
+        name="profile/OnBoarding/EditPrivacySet" 
         options={{ presentation: 'modal', headerShown: false }} 
       />
     </Stack>

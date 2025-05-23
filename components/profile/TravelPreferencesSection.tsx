@@ -31,7 +31,7 @@ export default function TravelPreferencesSection({
       <View className="flex-row justify-between items-center mb-3">
         <Text className="text-lg font-semibold text-tertiary">Travel Preferences</Text>
         <Pressable 
-          className="bg-tertiary py-1 px-3 rounded-full"
+          className="bg-quaternary py-1 px-3 rounded-full"
           onPress={onEditPreferences}
         >
           <Text className="text-white text-xs">Edit</Text>
@@ -41,7 +41,7 @@ export default function TravelPreferencesSection({
       <View className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
         <View className="flex-row flex-wrap mb-4">
           {travelPreferences.travelStyles?.map((style, index) => (
-            <View key={index} className="bg-quaternary rounded-full px-3 py-1 mr-2 mb-2">
+            <View key={index} className="bg-secondary rounded-full px-3 py-1 mr-2 mb-2">
               <Text className="text-xs">{style}</Text>
             </View>
           ))}
@@ -61,30 +61,7 @@ export default function TravelPreferencesSection({
                 `$${travelPreferences.budgetRange.min} - $${travelPreferences.budgetRange.max}` : 
                 "Not specified"}
             </Text>
-          </View>
-          
-          <View className="flex-1 ml-2">
-            <Text className="text-xs text-gray-500 mb-1">Eco-Friendly</Text>
-            <Text className="text-sm">
-              {travelPreferences.ecoFriendlyPreferences ? "Yes 🌱" : "No"}
-            </Text>
-          </View>
-        </View>
-        
-        <View className="mb-2">
-          <Text className="text-xs text-gray-500 mb-1">Travel With</Text>
-          <View className="flex-row">
-            {travelPreferences.travelCompanions?.map((companion, index) => (
-              <Text key={index} className="text-sm mr-2">
-                {companion}
-                {index < travelPreferences.travelCompanions.length - 1 ? "," : ""}
-              </Text>
-            ))}
-          </View>
-        </View>
-        
-        <View className="mb-2">
-          <Text className="text-xs text-gray-500 mb-1">Languages</Text>
+                      <Text className="text-xs text-gray-500 mb-1">Languages</Text>
           <View className="flex-row">
             {travelPreferences.languagePreferences?.map((lang, index) => (
               <Text key={index} className="text-sm mr-2">
@@ -93,8 +70,26 @@ export default function TravelPreferencesSection({
               </Text>
             ))}
           </View>
+          </View>
+          
+          <View className="flex-1 ml-2">
+            <Text className="text-xs text-gray-500 mb-1">Eco-Friendly</Text>
+            <Text className="text-sm">
+              {travelPreferences.ecoFriendlyPreferences ? "Yes 🌱" : "No"}
+            </Text>
+
+            <Text className="text-xs text-gray-500 mb-1">travel with</Text>
+            {travelPreferences.travelCompanions?.map((companion, index) => (
+              <Text key={index} className='text-sm mr-2'>
+                {companion}
+                {index < travelPreferences.travelCompanions.length - 1 ? "," : ""}
+              </Text>
+            ))}
+          </View>
+        </View>
+    
+        
         </View>
       </View>
-    </View>
-  );
+      );
 }
