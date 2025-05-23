@@ -29,8 +29,7 @@ export const mockUserProfile: Record<string,UserProfile> = {
   travelHistory: ['Paris', 'Tokyo', 'New York'],
   travelGoals: ['Bali', 'Sydney', 'Cape Town'],
   EcoImpact: {
-    ecoScore: 85,
-    itineraryId: ['it1'],
+    itineraryId: ['it1', 'it2'],
     stats: [
       {
         label: 'Carbon Footprint',
@@ -126,7 +125,6 @@ notifications: {
   travelHistory: ['Paris', 'Tokyo', 'New York'],
   travelGoals: ['Bali', 'Sydney', 'Cape Town'],
   EcoImpact: {
-    ecoScore: 75,
     itineraryId: ['it2'],
     stats: [
       {
@@ -223,7 +221,6 @@ notifications: {
   travelHistory: ['Paris', 'Tokyo', 'New York'],
   travelGoals: ['Bali', 'Sydney', 'Cape Town'],
   EcoImpact: {
-    ecoScore: 90,
     itineraryId: ['it2'],
     stats: [
       {

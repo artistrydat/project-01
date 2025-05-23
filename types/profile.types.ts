@@ -84,7 +84,6 @@ export interface EcoImpactStat {
 }
 
 export interface EcoImpact {
-  ecoScore: number;
   itineraryId: string[];
   stats: EcoImpactStat[];
 }
