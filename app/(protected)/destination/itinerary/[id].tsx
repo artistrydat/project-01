@@ -9,6 +9,7 @@ import { WeatherForecast } from '~/components/destination/WeatherForecast';
 import { ActivityList } from '~/components/destination/ActivityList';
 import { CommentsSection } from '~/components/destination/CommentsSection';
 import { useEffect } from 'react';
+import { LoadingView } from '~/components/ui/LoadingView';
 
 export default function ItineraryScreen() {
   const { id } = useLocalSearchParams();
@@ -73,10 +74,3 @@ export default function ItineraryScreen() {
     </SafeAreaView>
   );
 }
-
-const LoadingView = () => (
-  <SafeAreaView className="flex-1 items-center justify-center">
-    <ActivityIndicator size="large" color="#C6E7E3" />
-    <Text className="text-primary mt-2">Loading itinerary...</Text>
-  </SafeAreaView>
-);

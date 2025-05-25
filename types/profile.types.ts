@@ -50,6 +50,7 @@ export interface UserProfile {
   travelGoals: string[];
   chatRooms: string[];
   itineraries: string[];
+  favoriteitineraries: string[];
   isPremium: boolean;
   isSubscribed: boolean;
   travelPreferences: {

@@ -1,29 +1,25 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-
 import DestinationCard from '~/components/destination/DestinationCard';
 import { useItineraryStore } from '~/store/itinerary/ItineraryStore';
-import { mockititerarys } from '~/types/mockdata';
 
 export default function ExploreScreen() {
-  // Use the itinerary store
-  const { fetchItinerary, toggleFavorite, itinerary } = useItineraryStore();
-  
-  // Transform mock data into destination format
-  const [destinations, setDestinations] = useState(() => 
-    Object.entries(mockititerarys).map(([id, itinerary]) => ({
-      id,
-      name: itinerary.city,
-      country: itinerary.country,
-      image: itinerary.imageUrl,
-      trending: itinerary.trendingScore,
-      eco: itinerary.ecoScore,
-      isFavorite: itinerary.isfavorite
-    }))
-  );
+  // Use the itinerary store with additional functions
+  const { 
+    fetchItinerary, 
+    toggleFavorite, 
+    fetchPublicItineraries, 
+    userItineraries, 
+    isLoading 
+  } = useItineraryStore();
+
+  // Fetch public itineraries when component mounts
+  useEffect(() => {
+    fetchPublicItineraries();
+  }, [fetchPublicItineraries]);
 
   // Handle favorite toggle
   const handleToggleFavorite = (id: string) => {
@@ -31,13 +27,6 @@ export default function ExploreScreen() {
     fetchItinerary(id);
     // Then toggle its favorite status
     toggleFavorite();
-    
-    // Update local state for immediate UI feedback
-    setDestinations(currentDestinations => 
-      currentDestinations.map(dest => 
-        dest.id === id ? { ...dest, isFavorite: !dest.isFavorite } : dest
-      )
-    );
   };
 
   // Handle destination card press
@@ -74,25 +63,36 @@ export default function ExploreScreen() {
           Featured Destinations
         </Text>
         
-        <ScrollView 
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
-        >
-          {destinations.map((destination) => (
-            <DestinationCard
-              key={destination.id}
-              id={destination.id}
-              name={destination.name}
-              country={destination.country}
-              image={destination.image}
-              trending={destination.trending}
-              eco={destination.eco}
-              isFavorite={destination.isFavorite}
-              onToggleFavorite={() => handleToggleFavorite(destination.id)}
-              onPress={() => handleDestinationPress(destination.id)}
-            />
-          ))}
-        </ScrollView>
+        {isLoading ? (
+          <View className="flex-1 justify-center items-center py-10">
+            <ActivityIndicator size="large" color="#2C3E50" />
+            <Text className="mt-2 text-gray-500">Loading destinations...</Text>
+          </View>
+        ) : (
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 100 }}
+          >
+            {userItineraries.length === 0 ? (
+              <Text className="text-center py-10 text-gray-500">No public itineraries found</Text>
+            ) : (
+              userItineraries.map((itinerary) => (
+                <DestinationCard
+                  key={itinerary.ititeraryId}
+                  id={itinerary.ititeraryId}
+                  name={itinerary.city}
+                  country={itinerary.country}
+                  image={itinerary.imageUrl}
+                  trending={itinerary.trendingScore}
+                  eco={itinerary.ecoScore}
+                  isFavorite={itinerary.isfavorite}
+                  onToggleFavorite={() => handleToggleFavorite(itinerary.ititeraryId)}
+                  onPress={() => handleDestinationPress(itinerary.ititeraryId)}
+                />
+              ))
+            )}
+          </ScrollView>
+        )}
       </View>
     </SafeAreaView>
   );

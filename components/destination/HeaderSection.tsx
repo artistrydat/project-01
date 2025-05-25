@@ -78,8 +78,10 @@ export const HeaderSection = ({
   const handleToggleFavorite = () => {
     if (onToggleFavorite) {
       onToggleFavorite();
+      console.log(`Toggled favorite for ${displayName}`);
     } else {
       toggleFavorite();
+      console.log(`Toggled favorite for itinerary ID: ${itinerary?.ititeraryId}`);
     }
   };
 

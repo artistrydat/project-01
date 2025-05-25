@@ -30,6 +30,7 @@ export const mockUserProfile: Record<string, UserProfile> = {
     travelGoals: ['Bali', 'Sydney', 'Cape Town'],
     chatRooms: ['room1', 'room2'],
     itineraries: ['it1', 'it2'],
+    favoriteitineraries: ['it1'],
     travelPreferences: {
       preferredDestinations: ['Bali', 'Sydney', 'Cape Town'],
       travelStyles: ['Adventure', 'Relaxation'],
@@ -85,6 +86,7 @@ export const mockUserProfile: Record<string, UserProfile> = {
     travelGoals: ['Bali', 'Sydney', 'Cape Town'],
     chatRooms: ['room1', 'room2'],
     itineraries: ['it1', 'it2'],
+    favoriteitineraries: ['it1'],
     travelPreferences: {
       preferredDestinations: ['Bali', 'Sydney', 'Cape Town'],
       travelStyles: ['Adventure', 'Relaxation'],
@@ -140,6 +142,7 @@ export const mockUserProfile: Record<string, UserProfile> = {
     travelGoals: ['Bali', 'Sydney', 'Cape Town'],
     chatRooms: ['room1', 'room2'],
     itineraries: ['it1', 'it2'],
+    favoriteitineraries: ['it1'],
     travelPreferences: {
       preferredDestinations: ['Bali', 'Sydney', 'Cape Town'],
       travelStyles: ['Adventure', 'Relaxation'],

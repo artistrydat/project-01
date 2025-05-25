@@ -12,6 +12,7 @@ import InterestsCreditsSection from '~/components/profile/InterestsCreditsSectio
 import TravelJourneySection from '~/components/profile/TravelJourneySection';
 import TravelPreferencesSection from '~/components/profile/TravelPreferencesSection';
 import ContentTabsSection from '~/components/profile/ContentTabsSection';
+import { LoadingView } from '~/components/ui/LoadingView';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuthStore();
@@ -75,11 +76,7 @@ export default function ProfileScreen() {
   };
 
   if (!profile && isLoading) {
-    return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center">
-        <Text className="text-tertiary">Loading profile...</Text>
-      </SafeAreaView>
-    );
+    return <LoadingView />;
   }
 
   const memberSince = profile?.memberSince 
