@@ -15,6 +15,7 @@ export interface ititerary {
   highlights?: Highlight[];
   bestTimeToVisit: string;
   averageCost: string;
+  totalCost: number;
   localTips: string;
   startDate: string;
   endDate: string;

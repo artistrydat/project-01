@@ -14,7 +14,7 @@ export default function TravelJourneySection({ travelHistory, travelGoals }: Tra
       
       <View className="flex-row mb-4">
         {/* History */}
-        <View className="flex-1 bg-white rounded-xl p-3 mr-2 shadow-sm border border-gray-100">
+        <View className="flex-1 bg-white rounded-xl p-3 mr-2 shadow-sm border border-primary">
           <Text className="text-sm font-semibold mb-2 text-tertiary">Been To</Text>
           <View className="flex-row flex-wrap">
             {travelHistory && travelHistory.length > 0 ? (
@@ -31,7 +31,7 @@ export default function TravelJourneySection({ travelHistory, travelGoals }: Tra
         </View>
         
         {/* Goals */}
-        <View className="flex-1 bg-white rounded-xl p-3 ml-2 shadow-sm border border-gray-100">
+        <View className="flex-1 bg-white rounded-xl p-3 ml-2 shadow-sm border border-primary">
           <Text className="text-sm font-semibold mb-2 text-tertiary">Want To Go</Text>
           <View className="flex-row flex-wrap">
             {travelGoals && travelGoals.length > 0 ? (

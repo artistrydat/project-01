@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Switch, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Switch, Alert, SafeAreaView } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useProfileStore, useCurrentProfile } from '~/store/ProfileStore';
 
@@ -10,9 +10,9 @@ const EditNotification = () => {
   
   if (!currentProfile || !currentProfile.notifications) {
     return (
-      <View className="flex-1 items-center justify-center">
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
         <Text>Loading...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
   

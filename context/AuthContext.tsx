@@ -39,7 +39,7 @@ type AuthStore = {
 };
 
 const MOCK_USER: User = {
-  id: 'user123',
+  id: '1',
   name: 'Demo User',
   email: 'demo@travelco.com',
   avatar: 'https://randomuser.me/api/portraits/men/32.jpg',

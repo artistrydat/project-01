@@ -1,34 +1,44 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, ScrollView, SafeAreaView, Pressable, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { MaterialIcons, Entypo } from '@expo/vector-icons';
 import { useAuthStore } from '~/context/AuthContext';
 import { useProfileStore, useCurrentProfile } from '~/store/ProfileStore';
+import { useItineraryStore } from '~/store/itinerary/ItineraryStore';
 import { format } from 'date-fns';
 import ProfileHeader from '~/components/profile/ProfileHeader';
 import BadgesSection from '~/components/profile/BadgesSection';
 import InterestsCreditsSection from '~/components/profile/InterestsCreditsSection';
 import TravelJourneySection from '~/components/profile/TravelJourneySection';
-import EcoImpactSection from '~/components/profile/EcoImpactSection';
-import BudgetSection from '~/components/profile/BudgetSection';
 import TravelPreferencesSection from '~/components/profile/TravelPreferencesSection';
 import ContentTabsSection from '~/components/profile/ContentTabsSection';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuthStore();
   const { fetchProfile, isLoading } = useProfileStore();
+  const { fetchUserItineraries } = useItineraryStore();
   const profile = useCurrentProfile();
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
   
+  // Use useRef to prevent multiple fetches
+  const initialFetchDone = useRef(false);
+  
   useEffect(() => {
-    // Use user ID from auth, or default to first profile
-    if (user?.id) {
-      fetchProfile(user.id);
-    } else {
-      fetchProfile('1'); // Default to first mock profile
+    // Only run this once or when user ID changes
+    if (!initialFetchDone.current && user?.id) {
+      const userId = user.id;
+      
+      // Fetch profile data
+      fetchProfile(userId);
+      
+      // Fetch user itineraries for budget component
+      fetchUserItineraries(userId);
+      
+      
+      initialFetchDone.current = true;
     }
-  }, [user?.id, fetchProfile]);
+  }, [user?.id]); // Only depend on user ID
   
   const handleEditProfile = () => {
     router.push('/(protected)/profile/EditProfile');
@@ -61,7 +71,6 @@ export default function ProfileScreen() {
   };
   
   const toggleMenu = () => {
-    console.log("Toggle menu called, current state:", !menuVisible);
     setMenuVisible(!menuVisible);
   };
 
@@ -98,36 +107,19 @@ export default function ProfileScreen() {
             {/* Dropdown Menu - Positioned absolutely */}
             {menuVisible && (
               <View 
-                style={{
-                  position: 'absolute',
-                  top: 40,
-                  right: 0,
-                  width: 150,
-                  backgroundColor: 'white',
-                  borderRadius: 8,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 3.84,
-                  elevation: 5,
-                  zIndex: 1000
-                }}
+                className="absolute top-10 right-0 w-36 bg-white rounded-lg shadow-md z-10"
               >
                 <TouchableOpacity 
                   onPress={handleEditNotifications}
-                  style={{
-                    padding: 12,
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#f0f0f0'
-                  }}
+                  className="px-3 py-3 border-b border-gray-100"
                 >
-                  <Text style={{ color: '#191D15' }}>Notifications</Text>
+                  <Text className="text-tertiary">Notifications</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   onPress={handleEditPrivacy}
-                  style={{ padding: 12 }}
+                  className="px-3 py-3"
                 >
-                  <Text style={{ color: '#191D15' }}>Privacy</Text>
+                  <Text className="text-tertiary">Privacy</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -152,12 +144,10 @@ export default function ProfileScreen() {
           onShareProfile={handleShareProfile}
         />
         
-        {/* Rest of profile content... */}
+        {/* Profile sections with updated prop names */}
         <BadgesSection badges={profile?.badges} />
         <InterestsCreditsSection interests={profile?.interests} credits={profile?.credits} />
-        <TravelJourneySection travelHistory={profile?.travelHistory} travelGoals={profile?.travelGoals} />
-        <EcoImpactSection ecoImpact={profile?.EcoImpact} />
-        <BudgetSection budget={profile?.budget} />
+        <TravelJourneySection travelHistory={profile?.travelHistory} travelGoals={profile?.travelGoals} />      
         <TravelPreferencesSection travelPreferences={profile?.travelPreferences} onEditPreferences={handleEditPreferences} />
         <ContentTabsSection itineraries={profile?.itineraries} />
       </ScrollView>
@@ -165,15 +155,7 @@ export default function ProfileScreen() {
       {/* Overlay to close menu when clicking elsewhere */}
       {menuVisible && (
         <TouchableWithoutFeedback onPress={() => setMenuVisible(false)}>
-          <View style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: 'transparent',
-            zIndex: 10
-          }} />
+          <View className="absolute inset-0 bg-transparent z-10" />
         </TouchableWithoutFeedback>
       )}
     </SafeAreaView>

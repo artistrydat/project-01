@@ -7,6 +7,22 @@ import * as Font from 'expo-font';
 import { MaterialIcons } from '@expo/vector-icons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAuthStore, useAuthHydration } from '~/context/AuthContext';
+import { useColorScheme } from 'react-native';
+import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
+import { useFonts } from 'expo-font';
+
+// Create custom theme with your tailwind colors
+const createTheme = (isDarkMode: boolean) => {
+  return {
+    ...(isDarkMode ? MD3DarkTheme : MD3LightTheme),
+    colors: {
+      ...(isDarkMode ? MD3DarkTheme.colors : MD3LightTheme.colors),
+      primary: '#C6E7E3',
+      error: '#F3722C',
+      // Add other colors from your tailwind config as needed
+    },
+  };
+};
 
 SplashScreen.preventAutoHideAsync();
 
@@ -48,42 +64,34 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const [appIsReady, setAppIsReady] = useState(false);
-  const isHydrated = useAuthHydration();
+  const colorScheme = useColorScheme();
+  const theme = createTheme(colorScheme === 'dark');
+
+  const [loaded, error] = useFonts({
+    // Your fonts here
+  });
 
   useEffect(() => {
-    async function prepare() {
-      try {
-        await Font.loadAsync(MaterialIcons.font);
-        await new Promise(resolve => {
-          const checkReady = () => isHydrated ? resolve(true) : setTimeout(checkReady, 100);
-          checkReady();
-        });
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        setAppIsReady(true);
-      }
-    }
-
-    prepare();
-  }, [isHydrated]);
+    if (error) throw error;
+  }, [error]);
 
   useEffect(() => {
-    if (appIsReady) {
+    if (loaded) {
       SplashScreen.hideAsync();
     }
-  }, [appIsReady]);
+  }, [loaded]);
 
-  if (!appIsReady) {
+  if (!loaded) {
     return null;
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <RootLayoutNav />
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <PaperProvider theme={theme}>
+          <RootLayoutNav />
+        </PaperProvider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }

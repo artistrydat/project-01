@@ -31,7 +31,7 @@ export const WeatherForecast = ({ forecasts }: WeatherForecastProps) => {
         {forecasts.map((forecast) => (
           <View 
             key={forecast.id} 
-            className="bg-quaternary rounded-2xl p-4 items-center mr-4 w-28 shadow-sm"
+            className="bg-primary rounded-2xl p-4 items-center mr-4 w-28 shadow-sm"
           >
             {/* Month */}
             <Text className="text-gray-800 font-bold text-sm mb-1">

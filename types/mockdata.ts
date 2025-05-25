@@ -5,7 +5,7 @@ import type { ititerary } from './planner.types';
 export const mockititerarys: Record<string, ititerary> = {
   'it1': {
     ititeraryId: 'it1',
-    userId: 'user123',
+    userId: '1',
     name: 'Bali Adventure',
     city: 'Bali',
     country: 'Indonesia',
@@ -15,6 +15,7 @@ export const mockititerarys: Record<string, ititerary> = {
     ecoScore: 90,
     bestTimeToVisit: 'April to October',
     averageCost: '$50-100 per day',
+    totalcost: 270,
     localTips: 'Rent a scooter to get around the island, but be careful with traffic. Try the local Babi Guling (suckling pig) and visit waterfalls in the north.',
     startDate: '2025-05-15T10:00:00Z',
     endDate: '2025-05-17T10:00:00Z',
@@ -207,7 +208,7 @@ export const mockititerarys: Record<string, ititerary> = {
     Comments: [
       {
         id: 'c1',
-        userId: 'user123',
+        userId: '2',
         itineraryId: 'it1',
         content: 'Amazing trip! The temple visit was unforgettable.',
         createdAt: '2025-05-16T10:00:00Z',
@@ -219,7 +220,7 @@ export const mockititerarys: Record<string, ititerary> = {
       },
       {
         id: 'c2',
-        userId: 'user456',
+        userId: '3',
         itineraryId: 'it1',
         content: 'The street food tour was a highlight! Highly recommend.',
         createdAt: '2025-05-16T12:00:00Z',
@@ -233,7 +234,7 @@ export const mockititerarys: Record<string, ititerary> = {
   },
   'it2': {
     ititeraryId: 'it2',
-    userId: 'user456',
+    userId: '1',
     name: 'Kyoto Cultural Journey',
     city: 'Kyoto',
     country: 'Japan',
@@ -243,6 +244,7 @@ export const mockititerarys: Record<string, ititerary> = {
     ecoScore: 65,
     bestTimeToVisit: 'March-May and October-November',
     averageCost: '$70-120 per day',
+    totalcost: 175,
     localTips: 'Rent a bicycle to explore the city. Try kaiseki cuisine and matcha tea ceremonies.',
     startDate: '2025-04-05T10:00:00Z',
     endDate: '2025-04-07T10:00:00Z',

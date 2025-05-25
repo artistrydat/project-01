@@ -38,7 +38,7 @@ export default function TravelPreferencesSection({
         </Pressable>
       </View>
       
-      <View className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+      <View className="bg-white rounded-xl p-4 shadow-sm border border-primary">
         <View className="flex-row flex-wrap mb-4">
           {travelPreferences.travelStyles?.map((style, index) => (
             <View key={index} className="bg-secondary rounded-full px-3 py-1 mr-2 mb-2">

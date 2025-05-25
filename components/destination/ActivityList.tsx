@@ -32,7 +32,16 @@ const getActivityIcon = (type: string): {
 };
 
 export const ActivityList = ({ days, destinationId }: ActivityListProps) => {  
-  const { upvoted, downvoted, toggleUpvote, toggleDownvote, DeleteActivity } = useItineraryStore();
+  const { 
+    upvoted, 
+    downvoted, 
+    toggleUpvote, 
+    toggleDownvote, 
+    DeleteActivity,
+    calculateTotalCost,
+    calculateDayCost,
+    getTotalActivitiesCount
+  } = useItineraryStore();
   
   // Helper function to format dates
   const formatDate = (dateString: string) => {
@@ -47,11 +56,32 @@ export const ActivityList = ({ days, destinationId }: ActivityListProps) => {
     }
   };
   
+  // Get total cost and activities count from store
+  const totalTripCost = calculateTotalCost();
+  const totalActivities = getTotalActivitiesCount();
+  
   return (
     <View className="flex-1">
+      {/* Trip Summary Header */}
+      <View className="bg-white rounded-lg p-4 mb-4 shadow-md">
+        <Text className="text-2xl font-bold mb-4">Trip Activities</Text>
+        <View className="flex-row justify-between items-center">
+          <View className="flex-row items-center">
+            <Ionicons name="calendar" size={20} color="#1E493B" />
+            <Text className="text-gray-700 ml-2 font-medium">
+              {totalActivities} {totalActivities === 1 ? 'Activity' : 'Activities'}
+            </Text>
+          </View>
+          <View className="flex-row items-center bg-yellow-100 px-3 py-2 rounded-lg">
+            <Text className="text-gray-700 mr-1">Total Cost:</Text>
+            <Text className="text-gray-800 font-bold">${totalTripCost}</Text>
+          </View>
+        </View>
+      </View>
+      
       {days.map((day) => {
-        // Calculate total cost for the day
-        const totalCost = day.activitys.reduce((sum, activity) => sum + (activity.cost || 0), 0);
+        // Get day cost from the store instead of calculating locally
+        const totalCost = calculateDayCost(day.id);
         
         // Count activities by type
         const activityCounts = day.activitys.reduce((counts, activity) => {
@@ -62,7 +92,7 @@ export const ActivityList = ({ days, destinationId }: ActivityListProps) => {
         return (
           <View key={day.id} className="mb-6">
             {/* Improved Day Header */}
-            <View className="bg-quaternary rounded-t-lg p-4">
+            <View className="bg-primary rounded-t-lg p-4">
               <View className="flex-row justify-between items-center">
                 <View className="flex-row items-center">
                   <View className="bg-yellow-100 w-8 h-8 rounded-full items-center justify-center mr-2">
@@ -99,6 +129,9 @@ export const ActivityList = ({ days, destinationId }: ActivityListProps) => {
                       key={activity.id} 
                       className="mb-4 rounded-lg shadow p-4 border border-primary mr-4 w-64 flex"
                     >
+                      {/* Rest of the activity rendering code remains the same */}
+                      {/* ... */}
+                      
                       {/* Top content section */}
                       <View className="flex-1">
                         {/* Activity Header */}

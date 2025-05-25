@@ -1,9 +1,20 @@
-// Types related to user profile and profile screen
+// profile.types.ts
 
-export interface BudgetAlert {
-  id: string;
-  message: string;
-  type: 'positive' | 'warning' | 'negative';
+export interface ItineraryBudget {
+  itineraryId: string;
+  totalBudget: number;
+  actual: number;
+  remaining: number;
+  currency: string;
+}
+export interface EcoImpactStat {
+  label: string;
+  value: number;
+}
+
+export interface EcoImpact {
+  itineraryId: string[];
+  stats: EcoImpactStat[];
 }
 
 export interface UserProfile {
@@ -37,12 +48,10 @@ export interface UserProfile {
   friends: string[];
   travelHistory: string[];
   travelGoals: string[];
-  EcoImpact: EcoImpact;
-  budget: Budget;
   chatRooms: string[];
   itineraries: string[];
-  isPremium: boolean,
-  isSubscribed: boolean,
+  isPremium: boolean;
+  isSubscribed: boolean;
   travelPreferences: {
     preferredDestinations: string[];
     travelStyles: string[];
@@ -57,33 +66,18 @@ export interface UserProfile {
     dietaryRestrictions: string[];
     accessibilityNeeds: string[];
     languagePreferences: string[];
-    ecoFriendlyPreferences: boolean;}
-    notifications: {
-      newMessages: boolean;
-      itineraryUpdates: boolean;
-      friendRequests: boolean;
-      travelDeals: boolean;
-      ecoImpactUpdates: boolean;};
-    privacySettings: {
-      profileVisibility: 'public' | 'friends' | 'private';
-      locationSharing: boolean;
-      dataSharingWithPartners: boolean;
-    };
-}
-
-export interface Budget {
-  total: number;
-  spent: number;
-  currency: string;
-  alerts: BudgetAlert[];
-}
-
-export interface EcoImpactStat {
-  label: string;
-  value: number;
-}
-
-export interface EcoImpact {
-  itineraryId: string[];
-  stats: EcoImpactStat[];
+    ecoFriendlyPreferences: boolean;
+  };
+  notifications: {
+    newMessages: boolean;
+    itineraryUpdates: boolean;
+    friendRequests: boolean;
+    travelDeals: boolean;
+    ecoImpactUpdates: boolean;
+  };
+  privacySettings: {
+    profileVisibility: 'public' | 'friends' | 'private';
+    locationSharing: boolean;
+    dataSharingWithPartners: boolean;
+  };
 }
