@@ -26,42 +26,42 @@ export const TravelInfoSection = ({
   if (!bestTimeToVisit && !averageCost && !localTips) return null;
 
   return (
-    <View className="px-4 py-2">
+    <View className="px-5 py-4">
       <Text className="text-2xl font-bold mb-5">{title}</Text>
       
-      <View className="bg-white rounded-xl shadow-sm p-5">
+      <View className="bg-white rounded-xl p-5">
         {bestTimeToVisit && (
-          <View className="flex-row items-center mb-4">
-            <View className="w-10 h-10 rounded-full bg-secondary/20 items-center justify-center mr-4">
-              <Ionicons name="calendar-outline" size={20} color="#64B6AC" />
+          <View className="flex-row items-center mb-5">
+            <View className="w-12 h-12 rounded-full bg-secondary/20 items-center justify-center mr-4">
+              <Ionicons name="calendar-outline" size={22} color="#64B6AC" />
             </View>
             <View>
-              <Text className="text-gray-400 text-sm">Best Time to Visit:</Text>
-              <Text className="text-gray-800 font-medium">{bestTimeToVisit}</Text>
+              <Text className="text-gray-400 text-sm mb-1">Best Time to Visit:</Text>
+              <Text className="text-gray-800 font-medium text-base">{bestTimeToVisit}</Text>
             </View>
           </View>
         )}
         
         {averageCost && (
-          <View className="flex-row items-center mb-4">
-            <View className="w-10 h-10 rounded-full bg-secondary/20 items-center justify-center mr-4">
-              <FontAwesome name="dollar" size={20} color="#64B6AC" />
+          <View className="flex-row items-center mb-5">
+            <View className="w-12 h-12 rounded-full bg-secondary/20 items-center justify-center mr-4">
+              <FontAwesome name="dollar" size={22} color="#64B6AC" />
             </View>
             <View>
-              <Text className="text-gray-400 text-sm">Average Cost:</Text>
-              <Text className="text-gray-800 font-medium">{averageCost}</Text>
+              <Text className="text-gray-400 text-sm mb-1">Average Cost:</Text>
+              <Text className="text-gray-800 font-medium text-base">{averageCost}</Text>
             </View>
           </View>
         )}
         
         {localTips && (
           <View className="flex-row items-start">
-            <View className="w-10 h-10 rounded-full bg-secondary/20 items-center justify-center mr-4 mt-1">
-              <MaterialIcons name="lightbulb-outline" size={20} color="#64B6AC" />
+            <View className="w-12 h-12 rounded-full bg-secondary/20 items-center justify-center mr-4 mt-1">
+              <MaterialIcons name="lightbulb-outline" size={22} color="#64B6AC" />
             </View>
             <View>
-              <Text className="text-gray-400 text-sm">Local Tips:</Text>
-              <Text className="text-gray-800 font-medium">{localTips}</Text>
+              <Text className="text-gray-400 text-sm mb-1">Local Tips:</Text>
+              <Text className="text-gray-800 font-medium text-base">{localTips}</Text>
             </View>
           </View>
         )}

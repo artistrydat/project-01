@@ -20,38 +20,37 @@ export const WeatherForecast = ({ forecasts }: WeatherForecastProps) => {
   }
   
   return (
-    <View className="py-2 px-4">
-      <Text className="text-2xl font-bold mb-4">Weather Forecast</Text>
+    <View className="py-4">
+      <Text className="text-2xl font-bold mb-5">Weather Forecast</Text>
       
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 8 }}
+        contentContainerStyle={{ paddingBottom: 8, paddingRight: 16 }}
+        className="ml-1"
       >
         {forecasts.map((forecast) => (
           <View 
             key={forecast.id} 
-            className="bg-primary rounded-2xl p-4 items-center mr-4 w-28 shadow-sm"
+            className="bg-primary rounded-2xl p-4 items-center mr-4 w-32 shadow-sm"
           >
-            {/* Month */}
-            <Text className="text-gray-800 font-bold text-sm mb-1">
+            {/* Weather content with improved spacing */}
+            <Text className="text-gray-800 font-bold text-sm mb-2">
               {formatMonth(forecast.date)}
             </Text>
             
-            {/* Weather Icon */}
             <View className="my-3">
               {renderWeatherIcon(forecast.summary)}
             </View>
             
-            {/* Weather Condition */}
-            <Text className="text-gray-700 text-sm mb-2">
+            <Text className="text-gray-700 text-sm mb-3">
               {forecast.summary}
             </Text>
             
-            {/* Temperature */}
-            <Text className="text-gray-800 font-bold text-sm">
-              {forecast.low}°/{forecast.high}°
-            </Text>
+            <View className="flex-row justify-between w-full">
+              <Text className="font-bold text-sm">{forecast.high}°</Text>
+              <Text className="text-gray-500 text-sm">{forecast.low}°</Text>
+            </View>
           </View>
         ))}
       </ScrollView>

@@ -144,10 +144,14 @@ export const HeaderSection = ({
       
       {/* Description (below image) */}
       {displayDescription && (
-        <View className="mb-6">
+        <View className="mb-3">
           <Text className="text-lg text-gray-800 leading-6">{displayDescription}</Text>
         </View>
       )}
+      
+      {/* Divider */}
+      <View className="h-[1px] bg-gray-300 w-full mb-6" />
+      
     </View>
   );
 };

@@ -13,16 +13,16 @@ interface HighlightsSectionProps {
 
 export const HighlightsSection = ({ highlights }: HighlightsSectionProps) => {
   return (
-    <View className="px-4 py-2">
-      <Text className="text-2xl font-bold mb-4">Highlights</Text>
+    <View className="px-5 py-4">
+      <Text className="text-2xl font-bold mb-5">Highlights</Text>
       
-      <View className="space-y-4">
+      <View className="space-y-5">
         {highlights.map((highlight, index) => (
           <View key={highlight.id} className="flex-row items-start">
-            <Text className="text-amber-400 text-lg mr-2">★</Text>
+            <Text className="text-amber-400 text-lg mr-3">★</Text>
             <View className="flex-1">
               <Text className="text-lg font-semibold text-gray-800">{highlight.name}</Text>
-              <Text className="text-gray-600 mt-1">{highlight.description}</Text>
+              <Text className="text-gray-600 mt-2">{highlight.description}</Text>
             </View>
           </View>
         ))}

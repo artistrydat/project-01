@@ -1,6 +1,7 @@
 // stores/useItineraryStore.ts
 import {create} from 'zustand';
 import { mockititerarys } from '~/types/mockdata';
+import { mockUserProfile } from '~/types/profiledata';
 import type { ititerary, Activity } from '~/types/planner.types';
 
 interface ActivityState {
@@ -32,6 +33,9 @@ interface ItineraryState {
   calculateTotalCost: () => number;
   calculateDayCost: (dayId: string) => number;
   getTotalActivitiesCount: () => number;
+  // New properties for favorite itineraries
+  favoriteItineraries: ititerary[];
+  fetchUserFavoriteItineraries: (userId: string) => Promise<void>;
 }
 
 export const useItineraryStore = create<ItineraryState & ActivityState>((set, get) => ({
@@ -42,6 +46,7 @@ export const useItineraryStore = create<ItineraryState & ActivityState>((set, ge
   error: null,
   upvoted: {},
   downvoted: {},
+  favoriteItineraries: [],
 
   // Fetch a single itinerary by ID
   fetchItinerary: (id) => {
@@ -171,6 +176,7 @@ export const useItineraryStore = create<ItineraryState & ActivityState>((set, ge
       (sum, day) => sum + day.activitys.length, 0
     );
   },
+  
   // Add a comment to the itinerary
   addComment: (content) => {
     const { itinerary } = get();
@@ -251,16 +257,22 @@ export const useItineraryStore = create<ItineraryState & ActivityState>((set, ge
       }
     });
   },
-  // Fetch itineraries for a specific user
+  // Fetch itineraries for a specific user (itineraries created by the user)
   fetchUserItineraries: async (userId: string) => {
+    console.log(`[ItineraryStore] Fetching itineraries created by user: ${userId}`);
     set({ isLoading: true, error: null });
     try {
       // Mock implementation - replace with actual API call
       const userItineraries = Object.values(mockititerarys).filter(
         itinerary => itinerary.userId === userId
       );
+      
+      console.log(`[ItineraryStore] Found ${userItineraries.length} itineraries created by user ${userId}`);
+      console.log('[ItineraryStore] Itinerary IDs:', userItineraries.map(it => it.ititeraryId));
+      
       set({ userItineraries, isLoading: false });
     } catch (error) {
+      console.error(`[ItineraryStore] Error fetching user itineraries:`, error);
       set({ 
         isLoading: false, 
         error: error instanceof Error ? error.message : 'Failed to fetch user itineraries' 
@@ -281,6 +293,38 @@ export const useItineraryStore = create<ItineraryState & ActivityState>((set, ge
       set({ 
         isLoading: false, 
         error: error instanceof Error ? error.message : 'Failed to fetch public itineraries' 
+      });
+    }
+  },
+
+  // Fetch favorite itineraries for a specific user (using the user's profile data)
+  fetchUserFavoriteItineraries: async (userId: string) => {
+    console.log(`[ItineraryStore] Fetching favorite itineraries for user: ${userId}`);
+    set({ isLoading: true, error: null });
+    try {
+      // Get user profile to access the favorite itineraries list
+      const userProfile = mockUserProfile[userId];
+      
+      if (!userProfile) {
+        console.warn(`[ItineraryStore] User profile not found for ID: ${userId}`);
+        throw new Error(`User profile not found for ID: ${userId}`);
+      }
+      
+      // Get the list of favorite itinerary IDs from the user profile
+      const favoriteIds = userProfile.favoriteitineraries || [];
+      console.log(`[ItineraryStore] User has ${favoriteIds.length} favorite itineraries: ${favoriteIds.join(', ')}`);
+      
+      // Fetch all favorite itineraries by ID
+      const favorites = favoriteIds.map(id => mockititerarys[id]).filter(Boolean);
+      
+      console.log(`[ItineraryStore] Successfully fetched ${favorites.length} favorite itineraries`);
+      
+      set({ favoriteItineraries: favorites, isLoading: false });
+    } catch (error) {
+      console.error(`[ItineraryStore] Error fetching favorite itineraries:`, error);
+      set({ 
+        isLoading: false, 
+        error: error instanceof Error ? error.message : 'Failed to fetch favorite itineraries' 
       });
     }
   }

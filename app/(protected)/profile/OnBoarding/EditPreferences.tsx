@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useProfileStore, useCurrentProfile } from '~/store/ProfileStore';
+import Slider from '@react-native-community/slider';
 
 // Define types for the PreferenceChip props
 interface PreferenceChipProps {
@@ -103,6 +104,7 @@ export default function EditPreferences() {
         }
       });
       router.back();
+      console.log('Preferences saved:', preferences);
     }
   };
 
@@ -115,7 +117,13 @@ export default function EditPreferences() {
   if (!profile) {
     return (
       <SafeAreaView className="flex-1 bg-white items-center justify-center">
-        <Text>Loading preferences...</Text>
+        <View className="p-6 rounded-lg items-center">
+          <MaterialIcons name="settings" size={48} color="#10b981" />
+          <Text className="text-lg font-medium mt-4 text-gray-700">Loading preferences...</Text>
+          <View className="h-2 w-40 bg-gray-200 rounded-full mt-4 overflow-hidden">
+            <View className="h-full bg-teal-500 rounded-full animate-pulse" style={{ width: '60%' }} />
+          </View>
+        </View>
       </SafeAreaView>
     );
   }
@@ -202,18 +210,49 @@ export default function EditPreferences() {
         <View className="mb-8">
           <Text className="text-lg font-semibold mb-3">Budget Range</Text>
           <Text className="text-gray-600 mb-4">What&rsquo;s your typical travel budget?</Text>
-          <View className="mb-4">
-            <Text className="text-center text-gray-700 mb-4">
+          
+          <View className="mb-6">
+            <Text className="text-center text-gray-700 mb-4 text-lg font-medium">
               ${preferences.budgetRange.min} - ${preferences.budgetRange.max}
             </Text>
-            {/* Custom budget range bar visualization */}
-            <View className="h-8 bg-gray-200 rounded-full">
-              <View 
-                className="h-full bg-teal-500 rounded-full" 
-                style={{ 
-                  width: `${((preferences.budgetRange.max - preferences.budgetRange.min) / 9000) * 100}%`,
-                  marginLeft: `${(preferences.budgetRange.min / 10000) * 100}%`
-                }} 
+            
+            {/* Min budget slider */}
+            <View className="mb-6">
+              <Text className="text-gray-600 mb-2">Minimum budget: ${preferences.budgetRange.min}</Text>
+              <Slider
+                minimumValue={500}
+                maximumValue={preferences.budgetRange.max - 500}
+                step={100}
+                value={preferences.budgetRange.min}
+                onValueChange={(value) => 
+                  setPreferences(prev => ({
+                    ...prev,
+                    budgetRange: { ...prev.budgetRange, min: value }
+                  }))
+                }
+                minimumTrackTintColor="#10b981"
+                maximumTrackTintColor="#ddd"
+                thumbTintColor="#10b981"
+              />
+            </View>
+            
+            {/* Max budget slider */}
+            <View>
+              <Text className="text-gray-600 mb-2">Maximum budget: ${preferences.budgetRange.max}</Text>
+              <Slider
+                minimumValue={preferences.budgetRange.min + 500}
+                maximumValue={10000}
+                step={100}
+                value={preferences.budgetRange.max}
+                onValueChange={(value) => 
+                  setPreferences(prev => ({
+                    ...prev,
+                    budgetRange: { ...prev.budgetRange, max: value }
+                  }))
+                }
+                minimumTrackTintColor="#10b981"
+                maximumTrackTintColor="#ddd"
+                thumbTintColor="#10b981"
               />
             </View>
           </View>
@@ -238,13 +277,20 @@ export default function EditPreferences() {
         
         {/* Save Button */}
         <TouchableOpacity
-          className="bg-teal-500 py-4 rounded-full items-center mb-10"
+          className={`py-4 rounded-full items-center mb-10 ${isLoading ? 'bg-gray-400' : 'bg-teal-500'}`}
           onPress={handleSave}
           disabled={isLoading}
         >
-          <Text className="text-white font-bold text-lg">
-            {isLoading ? 'Saving...' : 'Save Preferences'}
-          </Text>
+          <View className="flex-row items-center justify-center">
+            {isLoading ? (
+              <Text className="text-white font-bold text-lg">Saving...</Text>
+            ) : (
+              <>
+                <MaterialIcons name="check" size={22} color="white" style={{ marginRight: 8 }} />
+                <Text className="text-white font-bold text-lg">Save Preferences</Text>
+              </>
+            )}
+          </View>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
