@@ -1,28 +1,12 @@
 import '../global.css';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
-import * as Font from 'expo-font';
-import { MaterialIcons } from '@expo/vector-icons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useAuthStore, useAuthHydration } from '~/context/AuthContext';
-import { useColorScheme } from 'react-native';
-import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
+import { useAuthStore, useAuthHydration } from '~/contexts/AuthContext';
 import { useFonts } from 'expo-font';
-
-// Create custom theme with your tailwind colors
-const createTheme = (isDarkMode: boolean) => {
-  return {
-    ...(isDarkMode ? MD3DarkTheme : MD3LightTheme),
-    colors: {
-      ...(isDarkMode ? MD3DarkTheme.colors : MD3LightTheme.colors),
-      primary: '#C6E7E3',
-      error: '#F3722C',
-      // Add other colors from your tailwind config as needed
-    },
-  };
-};
+import { ThemeProvider } from '~/contexts/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -32,27 +16,57 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
 
+  // Add debug logging
+  console.log('[Layout] Current state:', {
+    user: user?.email || 'null',
+    isHydrated,
+    segments: segments.join('/'),
+    userExists: !!user
+  });
+
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated) {
+      console.log('[Layout] Not hydrated yet, waiting...');
+      return;
+    }
 
     const inAuthGroup = segments[0] === '(auth)';
-    
-    // Simplified navigation logic with console logs
-    if (!user && !inAuthGroup) {
-      console.log('[Navigation] User not logged in, redirecting to login');
-      try {
-        router.replace('/(auth)/login');
-      } catch (error) {
-        console.error('[Navigation] Error navigating to login:', error);
+    const inProtectedGroup = segments[0] === '(protected)';
+
+    console.log('[Navigation] Navigation check:', {
+      user: user?.email || 'null',
+      inAuthGroup,
+      inProtectedGroup,
+      segments: segments.join('/')
+    });
+
+    // Add timeout to prevent immediate navigation issues
+    setTimeout(() => {
+      if (!user && !inAuthGroup) {
+        console.log('[Navigation] User not logged in, redirecting to login');
+        try {
+          router.replace('/(auth)/login');
+        } catch (error) {
+          console.error('[Navigation] Error navigating to login:', error);
+        }
+      } else if (user && inAuthGroup) {
+        console.log('[Navigation] User logged in, redirecting to explore');
+        try {
+          router.replace('/(protected)/(tabs)/explore');
+        } catch (error) {
+          console.error('[Navigation] Error navigating to explore:', error);
+        }
+      } else if (!user && inProtectedGroup) {
+        console.log('[Navigation] User not logged in but in protected, redirecting to login');
+        try {
+          router.replace('/(auth)/login');
+        } catch (error) {
+          console.error('[Navigation] Error navigating to login:', error);
+        }
+      } else {
+        console.log('[Navigation] No navigation needed');
       }
-    } else if (user && inAuthGroup) {
-      console.log('[Navigation] User logged in, redirecting to explore');
-      try {
-        router.replace('/(protected)/(tabs)/explore');
-      } catch (error) {
-        console.error('[Navigation] Error navigating to explore:', error);
-      }
-    }
+    }, 100);
   }, [user, segments, isHydrated, router]);
 
   return (
@@ -64,11 +78,8 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const theme = createTheme(colorScheme === 'dark');
-
   const [loaded, error] = useFonts({
-    // Your fonts here
+    // You can add custom fonts here if needed
   });
 
   useEffect(() => {
@@ -88,9 +99,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <PaperProvider theme={theme}>
+        <ThemeProvider>
           <RootLayoutNav />
-        </PaperProvider>
+        </ThemeProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>
   );

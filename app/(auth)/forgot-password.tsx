@@ -1,4 +1,4 @@
-import React, { useState, } from 'react';
+import React, { useState } from 'react';
 import { 
   View, 
   Text, 
@@ -14,13 +14,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Button } from '~/components/ui';
-import { useAuthStore } from '~/context/AuthContext';
+import { useAuthStore } from '~/contexts/AuthContext';
+import { useTheme } from '~/contexts/ThemeContext';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
   const [isEmailSent, setIsEmailSent] = useState(false);
   
-  const { resetPassword, isLoading } = useAuthStore();
+  const { colors, isDark } = useTheme();
+  const { isLoading } = useAuthStore();
   
   const handleResetPassword = async () => {
     // Basic validation
@@ -30,7 +32,8 @@ export default function ForgotPasswordScreen() {
     }
     
     try {
-      await resetPassword(email);
+      // Mock reset password - simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setIsEmailSent(true);
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to send reset email. Please try again.');
@@ -39,31 +42,66 @@ export default function ForgotPasswordScreen() {
   
   if (isEmailSent) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-1 justify-center items-center px-6">
-          <MaterialIcons name="mark-email-read" size={80} color="#4F46E5" />
-          <Text className="text-2xl font-bold mt-6 text-center">Check Your Email</Text>
-          <Text className="text-gray-600 text-center mt-2 mb-8">
-            We&apos;ve sent a password reset link to {email}
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 }}>
+          {/* Email sent icon - using theme colors */}
+          <View style={{ 
+            width: 96, 
+            height: 96, 
+            borderRadius: 24, 
+            backgroundColor: colors.electric, // themed electric color
+            alignItems: 'center', 
+            justifyContent: 'center',
+            shadowColor: isDark ? colors.primary : '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 8,
+            elevation: 8,
+            marginBottom: 24
+          }}>
+            <MaterialIcons name="mark-email-read" size={40} color={colors.textInverse} />
+          </View>
+          
+          {/* Success title - using typography tokens */}
+          <Text style={{ 
+            fontSize: 32, 
+            fontWeight: '900', 
+            textAlign: 'center', 
+            color: colors.text, // themed text color
+            marginBottom: 12
+          }}>
+            Check Your Email
+          </Text>
+          
+          {/* Success message - using theme colors */}
+          <Text style={{ 
+            color: colors.textSecondary, // themed secondary text
+            textAlign: 'center', 
+            marginBottom: 40, 
+            lineHeight: 24,
+            fontSize: 16
+          }}>
+            We&rsquo;ve sent a password reset link to{'\n'}
+            <Text style={{ fontWeight: '600', color: colors.electric }}>{email}</Text>
           </Text>
           
           <Button
-            label="Return to Login"
+            title="Return to Login"
             onPress={() => {
               // Navigate back to login
               setIsEmailSent(false);
               setEmail('');
             }}
             variant="outline"
-            size="medium"
-            fullWidth
+            size="lg"
           />
           
-          <View className="mt-6">
-            <Text className="text-center text-gray-600">
-              Didn&apos;t receive the email?{' '}
+          {/* Resend link - using theme colors */}
+          <View style={{ marginTop: 32 }}>
+            <Text style={{ textAlign: 'center', color: colors.textSecondary, fontSize: 16 }}>
+              Didn&rsquo;t receive the email?{' '}
               <Text 
-                className="text-indigo-600 font-medium"
+                style={{ color: colors.electric, fontWeight: 'bold' }}
                 onPress={handleResetPassword}
               >
                 Resend
@@ -76,47 +114,113 @@ export default function ForgotPasswordScreen() {
   }
   
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
+        style={{ flex: 1 }}
       >
         <ScrollView 
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Back Button */}
+          {/* Back Button - using theme surface color */}
           <Pressable 
-            className="p-4" 
+            style={{ padding: 16 }}
             onPress={() => router.back()}
           >
-            <MaterialIcons name="arrow-back" size={24} color="#333" />
+            <View style={{ 
+              width: 40, 
+              height: 40, 
+              borderRadius: 12, 
+              backgroundColor: colors.surface, // themed surface color
+              alignItems: 'center', 
+              justifyContent: 'center' 
+            }}>
+              <MaterialIcons name="arrow-back" size={24} color={colors.textSecondary} />
+            </View>
           </Pressable>
           
-          {/* Header */}
-          <View className="items-center">
-            <Image 
-              source={require('../../assets/icon.png')} 
-              className="w-20 h-20"
-              resizeMode="contain"
-            />
+          {/* Header with app icon - using theme colors */}
+          <View style={{ alignItems: 'center', marginTop: 16 }}>
+            <View style={{ 
+              width: 80, 
+              height: 80, 
+              borderRadius: 24, 
+              backgroundColor: colors.neon, // themed neon color
+              alignItems: 'center', 
+              justifyContent: 'center',
+              shadowColor: isDark ? colors.primary : '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 8
+            }}>
+              <Image 
+                source={require('../../assets/icon.png')} 
+                style={{ 
+                  width: 48, 
+                  height: 48,
+                  tintColor: colors.textInverse // themed inverse text
+                }}
+                resizeMode="contain"
+              />
+            </View>
           </View>
           
-          {/* Form */}
-          <View className="px-6 pt-6">
-            <Text className="text-2xl font-bold mb-2">Forgot Password?</Text>
-            <Text className="text-gray-600 mb-8">
-              Enter your email address and we&apos;ll send you a link to reset your password.
+          {/* Form Section */}
+          <View style={{ paddingHorizontal: 24, paddingTop: 32 }}>
+            {/* Page title - using theme colors */}
+            <Text style={{ 
+              fontSize: 32, 
+              fontWeight: '900', 
+              marginBottom: 8, 
+              color: colors.text // themed text color
+            }}>
+              Forgot Password?
             </Text>
             
-            {/* Email */}
-            <View className="mb-6">
-              <Text className="text-gray-700 mb-2 text-sm">Email</Text>
-              <View className="flex-row items-center border border-gray-300 rounded-lg px-3 py-2">
-                <MaterialIcons name="email" size={20} color="#9ca3af" />
+            {/* Description - using theme colors */}
+            <Text style={{ 
+              color: colors.textSecondary, // themed secondary text
+              marginBottom: 40, 
+              lineHeight: 24,
+              fontSize: 16
+            }}>
+              Enter your email address and we&rsquo;ll send you a link to reset your password ✨
+            </Text>
+            
+            {/* Email Input Field */}
+            <View style={{ marginBottom: 32 }}>
+              <Text style={{ 
+                color: colors.text, // themed text color
+                marginBottom: 12, 
+                fontSize: 16, 
+                fontWeight: '600' 
+              }}>
+                Email
+              </Text>
+              
+              {/* Input container - using theme colors */}
+              <View style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                borderWidth: 2, 
+                borderColor: colors.border, // themed border color
+                borderRadius: 16, 
+                paddingHorizontal: 16, 
+                paddingVertical: 16, 
+                backgroundColor: colors.surface // themed surface color
+              }}>
+                <MaterialIcons name="email" size={22} color={colors.electric} />
                 <TextInput
-                  className="flex-1 ml-2 text-base"
+                  style={{ 
+                    flex: 1, 
+                    marginLeft: 12, 
+                    fontSize: 16, 
+                    color: colors.text // themed text color
+                  }}
                   placeholder="Enter your email"
+                  placeholderTextColor={colors.textTertiary} // themed tertiary text
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
@@ -127,19 +231,30 @@ export default function ForgotPasswordScreen() {
             
             {/* Reset Button */}
             <Button
-              label="Reset Password"
+              title="Reset Password"
               onPress={handleResetPassword}
-              variant="primary"
-              size="large"
-              fullWidth
-              loading={isLoading}
+              variant="aurora"
+              size="lg"
+              isLoading={isLoading}
             />
             
-            {/* Login Link */}
-            <View className="flex-row justify-center mt-6">
-              <Text className="text-gray-600">Remember your password? </Text>
+            {/* Login Link - using theme colors */}
+            <View style={{ 
+              flexDirection: 'row', 
+              justifyContent: 'center', 
+              marginTop: 32 
+            }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 16 }}>
+                Remember your password?{' '}
+              </Text>
               <Link href="/(auth)/login" asChild>
-                <Text className="text-indigo-600 font-medium">Log In</Text>
+                <Text style={{ 
+                  color: colors.electric, // themed electric color
+                  fontWeight: 'bold',
+                  fontSize: 16
+                }}>
+                  Log In
+                </Text>
               </Link>
             </View>
           </View>

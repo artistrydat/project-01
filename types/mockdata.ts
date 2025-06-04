@@ -5,7 +5,7 @@ import type { ititerary } from './planner.types';
 export const mockititerarys: Record<string, ititerary> = {
   'it1': {
     ititeraryId: 'it1',
-    userId: '1',
+    userId: 'user123',
     name: 'Bali Adventure',
     city: 'Bali',
     country: 'Indonesia',
@@ -15,8 +15,8 @@ export const mockititerarys: Record<string, ititerary> = {
     ecoScore: 90,
     bestTimeToVisit: 'April to October',
     averageCost: '$50-100 per day',
-    totalcost: 270,
-    localTips: 'Rent a scooter to get around the island, but be careful with traffic. Try the local Babi Guling (suckling pig) and visit waterfalls in the north.',
+    totalCost: 270, // Changed from totalcost to totalCost
+    localTips: ['Rent a scooter to get around the island, but be careful with traffic.','Try the local Babi Guling (suckling pig) and visit waterfalls in the north.'],
     startDate: '2025-05-15T10:00:00Z',
     endDate: '2025-05-17T10:00:00Z',
     duration: 3,
@@ -36,7 +36,7 @@ export const mockititerarys: Record<string, ititerary> = {
             location: { lat: 34.052, lng: -118.243 },
             rating: 4.8,
             reviewsCount: 120,
-            priceLevel: 2,
+            cost: 90, // Added cost property
             openingHours: ['06:00', '18:00'],
             tags: ['temple', 'spiritual', 'landmark'],
             type: 'landmark',
@@ -185,26 +185,6 @@ export const mockititerarys: Record<string, ititerary> = {
         ],
       },
     ],
-    Highlights: [
-      {
-        id: 'h1',
-        name: 'Sunrise Temple Visit',
-        description: 'Beautiful temple known for its sunrise views',
-        icon: 'fort'
-      },
-      {
-        id: 'h2',
-        name: 'Local Street Food Tour',
-        description: 'Experience authentic Balinese cuisine',
-        icon: 'fastfood'
-      },
-      {
-        id: 'h3',
-        name: 'Beach Relaxation',
-        description: 'Relax at pristine Balinese beaches',
-        icon: 'beach_access'
-      },
-    ],
     Comments: [
       {
         id: 'c1',
@@ -234,7 +214,7 @@ export const mockititerarys: Record<string, ititerary> = {
   },
   'it2': {
     ititeraryId: 'it2',
-    userId: '1',
+    userId: 'user123',
     name: 'Kyoto Cultural Journey',
     city: 'Kyoto',
     country: 'Japan',
@@ -244,8 +224,8 @@ export const mockititerarys: Record<string, ititerary> = {
     ecoScore: 65,
     bestTimeToVisit: 'March-May and October-November',
     averageCost: '$70-120 per day',
-    totalcost: 175,
-    localTips: 'Rent a bicycle to explore the city. Try kaiseki cuisine and matcha tea ceremonies.',
+    totalCost: 175, // Changed from totalcost to totalCost
+    localTips: ['Rent a bicycle to explore the city.','Try kaiseki cuisine and matcha tea ceremonies.'],
     startDate: '2025-04-05T10:00:00Z',
     endDate: '2025-04-07T10:00:00Z',
     duration: 3,
@@ -263,7 +243,7 @@ export const mockititerarys: Record<string, ititerary> = {
             description: 'Explore the famous shrine with thousands of torii gates.',
             imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
             location: { lat: 34.967, lng: 135.772 },
-            rating: 4.9,
+            rating: 4.4,
             reviewsCount: 500,
             cost: 20,
             openingHours: ['07:00', '18:00'],
@@ -355,26 +335,6 @@ export const mockititerarys: Record<string, ititerary> = {
         weather: [
           { id: 'w9', date: '2025-04-07T10:00:00Z', summary: 'Clear', icon: 'wb-sunny', high: 21, low: 13 },
         ],
-      },
-    ],
-    Highlights: [
-      {
-        id: 'h6',
-        name: 'Fushimi Inari Shrine',
-        description: 'Iconic shrine with thousands of vermilion torii gates',
-        icon: 'fort'
-      },
-      {
-        id: 'h7',
-        name: 'Arashiyama Bamboo Grove',
-        description: 'Picturesque walking paths through towering bamboo',
-        icon: 'nature'
-      },
-      {
-        id: 'h8',
-        name: 'Traditional Tea Ceremony',
-        description: 'Experience authentic Japanese tea culture',
-        icon: 'coffee'
       },
     ],
     Comments: [

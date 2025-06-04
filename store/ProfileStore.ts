@@ -2,6 +2,23 @@ import { create } from 'zustand';
 import { mockUserProfile } from '~/types/profiledata';
 import type { UserProfile } from '~/types/profile.types';
 
+interface TravelPreferences {
+  preferredDestinations: string[];
+  travelStyles: string[];
+  preferredActivities: string[];
+  budgetRange: {
+    min: number;
+    max: number;
+  };
+  travelCompanions: string[];
+  accommodationPreferences: string[];
+  transportationPreferences: string[];
+  dietaryRestrictions: string[];
+  accessibilityNeeds: string[];
+  languagePreferences: string[];
+  ecoFriendlyPreferences: boolean;
+}
+
 interface ProfileState {
   // State
   profiles: Record<string, UserProfile>;
@@ -25,6 +42,9 @@ interface ProfileState {
     index: number
   ) => void;
   
+  // Travel Preferences Management
+  updateTravelPreferences: (userId: string, preferences: Partial<TravelPreferences>) => void;
+  
   // Settings Actions
   updateNotificationSettings: (userId: string, settings: Partial<UserProfile['notifications']>) => void;
   updatePrivacySettings: (userId: string, settings: Partial<UserProfile['privacySettings']>) => void;
@@ -38,12 +58,16 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   
   // Actions
   fetchProfile: (userId: string) => {
+    console.log(`[ProfileStore] Fetching profile for user: ${userId}`);
+    console.log(`[ProfileStore] Available profile keys:`, Object.keys(mockUserProfile));
+    
     set({ isLoading: true });
     
     // Simulate API call with a timeout
     setTimeout(() => {
       // Check if profile exists in our mock data
       if (mockUserProfile[userId]) {
+        console.log(`[ProfileStore] Found profile for user: ${userId}`);
         set(state => ({
           profiles: {
             ...state.profiles,
@@ -53,10 +77,16 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
           isLoading: false
         }));
       } else {
+        console.warn(`[ProfileStore] Profile not found for user: ${userId}, using fallback`);
         // Fallback to first profile if ID not found
         const firstId = Object.keys(mockUserProfile)[0];
+        console.log(`[ProfileStore] Using fallback profile: ${firstId}`);
+        
         set(state => ({
-          profiles: state.profiles,
+          profiles: {
+            ...state.profiles,
+            [firstId]: mockUserProfile[firstId]
+          },
           currentProfileId: firstId,
           isLoading: false
         }));
@@ -131,6 +161,32 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     });
   },
   
+  // New travel preferences management function
+  updateTravelPreferences: (userId: string, preferences: Partial<TravelPreferences>) => {
+    set({ isLoading: true });
+    
+    setTimeout(() => {
+      set(state => {
+        const currentProfile = state.profiles[userId];
+        if (!currentProfile) return { ...state, isLoading: false };
+        
+        return {
+          profiles: {
+            ...state.profiles,
+            [userId]: {
+              ...currentProfile,
+              travelPreferences: {
+                ...currentProfile.travelPreferences,
+                ...preferences
+              }
+            }
+          },
+          isLoading: false
+        };
+      });
+    }, 500);
+  },
+  
   // New settings management functions
   updateNotificationSettings: (userId, settings) => {
     set(state => {
@@ -173,8 +229,23 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   }
 }));
 
-// Helper selector to get current profile
+// Enhanced helper selector to get current profile with better error handling
 export const useCurrentProfile = () => {
   const { profiles, currentProfileId } = useProfileStore();
-  return currentProfileId ? profiles[currentProfileId] : null;
+  
+  if (!currentProfileId) {
+    console.log('[useCurrentProfile] No current profile ID set');
+    return null;
+  }
+  
+  const profile = profiles[currentProfileId];
+  
+  if (!profile) {
+    console.warn(`[useCurrentProfile] Profile not found for ID: ${currentProfileId}`);
+    // Return first available profile as fallback
+    const firstProfileKey = Object.keys(profiles)[0];
+    return firstProfileKey ? profiles[firstProfileKey] : null;
+  }
+  
+  return profile;
 };

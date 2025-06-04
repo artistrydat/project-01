@@ -1,9 +1,11 @@
-// components/HeaderSection.tsx
-import { View, Text, Image, Pressable, Share, Platform } from 'react-native';
+import React from 'react';
+import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import { useItineraryStore } from '~/store/itinerary/ItineraryStore';
-import * as Linking from 'expo-linking';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
+import { useTheme } from '~/contexts/ThemeContext';
 
 interface HeaderSectionProps {
   name?: string;
@@ -13,7 +15,6 @@ interface HeaderSectionProps {
   ecoScore?: number;
   description?: string;
   onToggleFavorite?: () => void;
-  onShare?: () => void;
 }
 
 export const HeaderSection = ({
@@ -24,134 +25,223 @@ export const HeaderSection = ({
   ecoScore,
   description,
   onToggleFavorite,
-  onShare
 }: HeaderSectionProps = {}) => {
+  const { colors, isDark } = useTheme();
   const { itinerary, toggleFavorite } = useItineraryStore();
-  
-  // Use props if provided, otherwise fallback to itinerary data
+
   const displayName = name || itinerary?.name;
   const displayImageUrl = imageUrl || itinerary?.imageUrl;
   const displayIsFavorite = isFavorite !== undefined ? isFavorite : itinerary?.isfavorite;
   const displayTrendingScore = trendingScore || itinerary?.trendingScore;
   const displayEcoScore = ecoScore || itinerary?.ecoScore;
   const displayDescription = description || itinerary?.description;
-  
+
   if (!displayName || !displayImageUrl) return null;
-  
-  const handleShare = async () => {
-    if (onShare) {
-      onShare();
-    } else {
-      try {
-        // Create a deep link URL to this destination
-        // Fix for TypeScript error: Use optional chaining and provide fallback for ID
-        const destinationId = itinerary?.ititeraryId || 'unknown';
-        
-        const url = Linking.createURL(`destination/${destinationId}`, {
-          queryParams: { 
-            name: displayName,
-            source: 'share'
-          }
-        });
-        
-        console.log("Generated deep link:", url);
-        
-        // Use React Native's Share API to share the URL
-        await Share.share(
-          Platform.OS === 'ios' 
-            ? {
-                url: url,
-              }
-            : {
-                message: `Check out ${displayName} on our travel app! ${url}`,
-              }, 
-          {
-            dialogTitle: `Share ${displayName}`
-          }
-        );
-      } catch (error) {
-        console.error('Error sharing via deep link:', error);
-      }
-    }
-  };
 
   const handleToggleFavorite = () => {
-    if (onToggleFavorite) {
-      onToggleFavorite();
-      console.log(`Toggled favorite for ${displayName}`);
-    } else {
-      toggleFavorite();
-      console.log(`Toggled favorite for itinerary ID: ${itinerary?.ititeraryId}`);
-    }
+    if (onToggleFavorite) return onToggleFavorite();
+    toggleFavorite();
   };
 
   return (
-    <View className="relative h-72 mb-4">
-      {/* Background Image */}
+    <Animated.View
+      entering={FadeIn.duration(800)}
+      style={{
+        position: 'relative',
+        marginBottom: 24, // mb-6
+        overflow: 'hidden',
+        height: 420
+      }}
+    >
+      {/* Hero Image */}
       <Image
         source={{ uri: displayImageUrl }}
-        className="w-full h-full"
+        style={{
+          width: '100%',
+          height: '100%',
+          position: 'absolute',
+          top: 0,
+          left: 0
+        }}
         resizeMode="cover"
       />
       
-      {/* Back Button */}
-      <Pressable 
-        className="absolute top-10 left-4 bg-quinary/80 rounded-full p-2"
-        onPress={() => router.back()}
+      {/* Add a gradient overlay for better readability */}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.35)', 'rgba(0,0,0,0.05)', 'rgba(0,0,0,0.55)']}
+        style={{ ...StyleSheet.absoluteFillObject }}
+      />
+
+      {/* Controls - Only Favorite Button */}
+      <View style={{
+        position: 'absolute',
+        top: 48, // top-12
+        right: 16,
+        flexDirection: 'row', // flex-row
+        alignItems: 'center', // items-center
+      }}>
+        <Animated.View 
+          entering={SlideInDown.delay(400)} 
+        >
+          <BlurView 
+            intensity={isDark ? 50 : 30} 
+            style={{
+              borderRadius: 16, // rounded-2xl
+              overflow: 'hidden',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 8,
+              elevation: 6 // shadow-lg
+            }}
+          >
+            <Pressable
+              style={{
+                padding: 12, // p-3
+                transform: [{ scale: 1 }], // active:scale-95 base state
+                backgroundColor: displayIsFavorite
+                  ? 'rgba(255, 90, 95, 0.3)'
+                  : 'rgba(255,255,255,0.1)'
+              }}
+              onPress={handleToggleFavorite}
+            >
+              <MaterialIcons
+                name={displayIsFavorite ? 'favorite' : 'favorite-outline'}
+                size={24}
+                color={displayIsFavorite ? '#FF5A5F' : colors.textInverse}
+              />
+            </Pressable>
+          </BlurView>
+        </Animated.View>
+      </View>
+
+      {/* Info Section */}
+      <Animated.View 
+        entering={SlideInDown.delay(600)} 
+        style={{
+          position: 'absolute',
+          bottom: 96, // bottom-24
+          left: 0,
+          right: 0,
+          paddingHorizontal: 24 // px-6
+        }}
       >
-        <MaterialIcons name="arrow-back" size={24} color="#1E493B" />
-      </Pressable>
-      
-      {/* Action Buttons */}
-      <View className="absolute top-10 right-4 items-center">
-        <Pressable 
-          className={`rounded-full p-2 mb-2 ${displayIsFavorite ? 'bg-secondary' : 'bg-white/80'}`}
-          onPress={handleToggleFavorite}
-        >
-          <MaterialIcons 
-            name={displayIsFavorite ? "favorite" : "favorite-outline"} 
-            size={24} 
-            color={displayIsFavorite ? "#191D15" : "#333"} 
-          />
-        </Pressable>
-        
-        <Pressable 
-          className="bg-white/80 rounded-full p-2"
-          onPress={handleShare}
-        >
-          <MaterialIcons name="connect-without-contact" size={20} color="#333" />
-        </Pressable>
-      </View>
-      
-      {/* Bottom Info Overlay */}
-      <View className="absolute bottom-0 left-0 right-0 bg-black/50 p-4">
-        <Text className="text-white text-2xl font-bold">{displayName}</Text>
-        <View className="flex-row mt-1">
-          <View className="flex-row items-center mr-4">
-            <MaterialIcons name="trending-up" size={16} color="#EBFA9F" />
-            <Text className="ml-1 text-white text-sm">
-              Trending: {displayTrendingScore}%
-            </Text>
-          </View>
-          <View className="flex-row items-center">
-            <MaterialIcons name="eco" size={16} color="#C6E7E3" />
-            <Text className="ml-1 text-white text-sm">
-              Eco: {displayEcoScore}%
-            </Text>
-          </View>
+        <Text style={{
+          color: colors.textInverse, // textInverse theme color
+          fontSize: 36, // text-4xl
+          fontWeight: 'bold', // font-black
+          letterSpacing: -0.025, // tracking-tight
+          marginBottom: 12, // mb-3
+          textShadowColor: 'rgba(0, 0, 0, 0.3)',
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 3 // drop-shadow-lg
+        }}>
+          {displayName}
+        </Text>
+
+        <View style={{
+          flexDirection: 'row', // flex-row
+          gap: 16, // space-x-4 equivalent
+          marginBottom: 16 // mb-4
+        }}>
+          {displayTrendingScore && (
+            <View style={{
+              backgroundColor: colors.warning, // warning theme color
+              borderRadius: 9999, // rounded-full
+              paddingHorizontal: 16, // px-4
+              paddingVertical: 8, // py-2
+              flexDirection: 'row', // flex-row
+              alignItems: 'center', // items-center
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 8,
+              elevation: 6 // shadow-lg
+            }}>
+              <MaterialIcons name="trending-up" size={16} color={colors.textInverse} />
+              <Text style={{
+                color: colors.textInverse, // textInverse theme color
+                marginLeft: 8, // ml-2
+                fontWeight: 'bold', // font-bold
+                fontSize: 14 // text-sm
+              }}>
+                {displayTrendingScore}
+              </Text>
+            </View>
+          )}
+          {displayEcoScore && (
+            <View style={{
+              backgroundColor: colors.success, // success theme color
+              borderRadius: 9999, // rounded-full
+              paddingHorizontal: 16, // px-4
+              paddingVertical: 8, // py-2
+              flexDirection: 'row', // flex-row
+              alignItems: 'center', // items-center
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 8,
+              elevation: 6 // shadow-lg
+            }}>
+              <MaterialIcons name="eco" size={16} color={colors.textInverse} />
+              <Text style={{
+                color: colors.textInverse, // textInverse theme color
+                marginLeft: 8, // ml-2
+                fontWeight: 'bold', // font-bold
+                fontSize: 14 // text-sm
+              }}>
+                {displayEcoScore}
+              </Text>
+            </View>
+          )}
         </View>
-      </View>
-      
-      {/* Description (below image) */}
+      </Animated.View>
+
+      {/* Description */}
       {displayDescription && (
-        <View className="mb-3">
-          <Text className="text-lg text-gray-800 leading-6">{displayDescription}</Text>
-        </View>
+        <Animated.View 
+          entering={SlideInDown.delay(800)} 
+          style={{
+            position: 'absolute',
+            bottom: 16, // bottom-4
+            left: 16, // left-4
+            right: 16 // right-4
+          }}
+        >
+          <BlurView
+            intensity={isDark ? 60 : 40}
+            style={{
+              borderRadius: 24, // rounded-3xl
+              overflow: 'hidden',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 12 },
+              shadowOpacity: 0.25,
+              shadowRadius: 20,
+              elevation: 12, // shadow-xl
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.1)' // border-white/10
+            }}
+          >
+            <LinearGradient
+              colors={
+                isDark
+                  ? ['rgba(30, 41, 59, 0.9)', 'rgba(51, 65, 85, 0.9)'] // slate-800/900 with transparency
+                  : ['rgba(255, 255, 255, 0.95)', 'rgba(248, 250, 252, 0.95)'] // white/slate-50 with transparency
+              }
+              style={{ padding: 20 }} // p-5
+            >
+              <Text style={{
+                fontSize: 16, // text-base
+                fontWeight: '500', // font-medium
+                lineHeight: 24, // leading-relaxed
+                color: colors.text // text theme color
+              }}>
+                {displayDescription}
+              </Text>
+            </LinearGradient>
+          </BlurView>
+        </Animated.View>
       )}
-      
-      {/* Divider */}
-      <View className="h-[1px] bg-gray-300 w-full mb-6" />
-      
-    </View>
+    </Animated.View>
   );
 };

@@ -1,282 +1,676 @@
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import type { ItineraryDay } from '~/types/planner.types';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useItineraryStore } from '~/store/itinerary/ItineraryStore';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Pressable, Image, TouchableOpacity } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInUp, FadeInRight, configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
+import { useTheme } from '~/contexts/ThemeContext';
 import { router } from 'expo-router';
-// Add new import for date formatting
-import { format, parseISO } from 'date-fns';
+import { useItineraryStore } from '~/store/itinerary/ItineraryStore';
+
+// Configure logger to disable strict mode
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.warn,
+  strict: false, // This disables the strict mode warnings
+});
+
+interface Activity {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+  type: 'landmark' | 'activity' | 'food' | 'accommodation';
+  rating: number;
+  cost?: number;
+  duration?: string;
+  openingHours?: string[];
+  tags?: string[];
+}
+
+interface ActivityDay {
+  id: string;
+  day: number;
+  title: string;
+  activities: Activity[];
+  weather?: any[];
+}
 
 interface ActivityListProps {
-  days: ItineraryDay[];
+  days: ActivityDay[];
   destinationId: string;
 }
 
-// Type-safe icon getter remains unchanged
-const getActivityIcon = (type: string): {
-  name: any;
-  color: string;
-  Component: typeof Ionicons | typeof MaterialIcons;
-} => {
-  switch (type) {
-    case 'landmark':
-      return { name: 'location', color: '#F97316', Component: Ionicons };
-    case 'activity':
-      return { name: 'walk', color: '#10B981', Component: Ionicons };
-    case 'food':
-      return { name: 'restaurant', color: '#EC4899', Component: MaterialIcons };
-    case 'accommodation':
-      return { name: 'hotel', color: '#6366F1', Component: MaterialIcons };
-    default:
-      return { name: 'bookmark', color: '#9CA3AF', Component: Ionicons };
-  }
-};
-
-export const ActivityList = ({ days, destinationId }: ActivityListProps) => {  
-  const { 
-    upvoted, 
-    downvoted, 
-    toggleUpvote, 
-    toggleDownvote, 
-    DeleteActivity,
-    calculateTotalCost,
-    calculateDayCost,
-    getTotalActivitiesCount
-  } = useItineraryStore();
+const ActivityTypeIcon = ({ type }: { type: string }) => {
+  const { colors } = useTheme();
   
-  // Helper function to format dates
-  const formatDate = (dateString: string) => {
-    try {
-      // Try to parse the date string
-      const date = parseISO(dateString);
-      // Format as "Monday, Jan 15" or similar
-      return format(date, 'EEEE, MMM d');
-    } catch {
-      // Fallback to original string if parsing fails
-      return dateString;
-    }
+  const iconMap = {
+    landmark: 'location-city',
+    food: 'restaurant',
+    accommodation: 'hotel',
+    activity: 'directions-run'
   };
   
-  // Get total cost and activities count from store
-  const totalTripCost = calculateTotalCost();
-  const totalActivities = getTotalActivitiesCount();
-  
+  const colorMap = {
+    landmark: colors.warning || '#f59e0b',
+    food: colors.error || '#ef4444',
+    accommodation: colors.primary || '#000',
+    activity: colors.success || '#10b981'
+  };
+
   return (
-    <View className="flex-1">
-      {/* Trip Summary Header - keep this */}
-      <View className="bg-white rounded-lg p-4 mb-4 shadow-md">
-        <Text className="text-2xl font-bold mb-4">Trip Activities</Text>
-        <View className="flex-row justify-between items-center">
-          <View className="flex-row items-center">
-            <Ionicons name="calendar" size={20} color="#1E493B" />
-            <Text className="text-gray-700 ml-2 font-medium">
-              {totalActivities} {totalActivities === 1 ? 'Activity' : 'Activities'}
+    <View 
+      style={{
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 3
+      }}
+    >
+      <MaterialIcons 
+        name={iconMap[type as keyof typeof iconMap] as any} 
+        size={18} 
+        color={colorMap[type as keyof typeof colorMap]} 
+      />
+    </View>
+  );
+};
+
+const WeatherWidget = ({ weather }: { weather: any }) => {
+  const { colors } = useTheme();
+  
+  if (!weather) return null;
+
+  const getWeatherIcon = (condition: string) => {
+    const iconMap: { [key: string]: string } = {
+      'sunny': 'wb-sunny',
+      'clear': 'wb-sunny',
+      'cloudy': 'cloud',
+      'partly cloudy': 'cloud',
+      'rainy': 'umbrella',
+      'showers': 'umbrella',
+      'stormy': 'thunderstorm'
+    };
+    
+    return iconMap[condition.toLowerCase()] || 'wb-sunny';
+  };
+
+  return (
+    <View style={{
+      backgroundColor: colors.surface || '#fff',
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: colors.border || '#ddd'
+    }}>
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <MaterialIcons 
+            name={getWeatherIcon(weather.summary || 'sunny') as any} 
+            size={24} 
+            color={colors.primary || '#000'}
+          />
+          <View style={{ marginLeft: 12 }}>
+            <Text style={{ fontWeight: '600', color: colors.text || '#000' }}>
+              {String(weather.summary || 'Unknown')}
+            </Text>
+            <Text style={{ color: colors.textSecondary || '#666', fontSize: 14 }}>
+              <Text>{String(weather.high || 'N/A')}</Text>
+              <Text>°/</Text>
+              <Text>{String(weather.low || 'N/A')}</Text>
+              <Text>°C</Text>
             </Text>
           </View>
-          <View className="flex-row items-center bg-yellow-100 px-3 py-2 rounded-lg">
-            <Text className="text-gray-700 mr-1">Total Cost:</Text>
-            <Text className="text-gray-800 font-bold">${totalTripCost}</Text>
-          </View>
+        </View>
+        <View style={{
+          backgroundColor: colors.backgroundSecondary || '#f5f5f5',
+          paddingHorizontal: 12,
+          paddingVertical: 4,
+          borderRadius: 9999
+        }}>
+          <Text style={{ color: colors.text || '#000', fontWeight: '500', fontSize: 14 }}>
+            {weather.date ? new Date(weather.date).toLocaleDateString('en-US', { weekday: 'short' }) : 'N/A'}
+          </Text>
         </View>
       </View>
-      
-      {days.map((day) => {
-        // Get day cost from the store instead of calculating locally
-        const totalCost = calculateDayCost(day.id);
-        
-        // Count activities by type
-        const activityCounts = day.activitys.reduce((counts, activity) => {
-          counts[activity.type] = (counts[activity.type] || 0) + 1;
-          return counts;
-        }, {} as Record<string, number>);
-        
-        return (
-          <View key={day.id} className="mb-6">
-            {/* REMOVE FIRST DUPLICATE HEADER */}
-            
-            {/* Activities List with proper header */}
-            <View className="bg-white border border-primary rounded-lg">
-              {/* Keep only this Day Header */}
-              <View className="bg-primary rounded-t-lg p-4">
-                <View className="flex-row justify-between items-center">
-                  <View className="flex-row items-center">
-                    <View className="bg-yellow-100 w-8 h-8 rounded-full items-center justify-center mr-2">
-                      <Text className="text-gray-800 font-bold">{day.id}</Text>
-                    </View>
-                    <View>
-                      <Text className="text-gray-800 text-lg font-bold">{formatDate(day.date)}</Text>
-                      <Text className="text-gray-600 text-xs">Day {day.id} of your journey</Text>
-                    </View>
-                  </View>
-                  <View className="flex-row items-center">
-                    <Text className="text-gray-700 mr-1">Total: </Text>
-                    <Text className="text-gray-800 font-bold bg-yellow-100 px-2 py-1 rounded-lg">${totalCost}</Text>
-                  </View>
-                </View>
-              </View>
-              
-              {/* Rest of the code remains unchanged */}
-              <View className="pt-4 pb-2">
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}
-                >
-                  {day.activitys.map((activity) => {
-                    const activityIcon = getActivityIcon(activity.type);
-                    
-                    // Calculate upvote/downvote counts with user interactions
-                    const activityUpvoteCount = activity.upvoteCount + (upvoted[activity.id] ? 1 : 0);
-                    const activityDownvoteCount = activity.downvoteCount + (downvoted[activity.id] ? 1 : 0);
-                    
-                    return (
-                      <View 
-                        key={activity.id} 
-                        className="mb-4 rounded-lg shadow-sm border border-gray-200 mr-4 w-64"
-                        style={{ backgroundColor: '#ffffff' }}
-                      >
-                        {/* Activity content - improved padding */}
-                        <View className="p-4">
-                          {/* Top content section */}
-                          <View className="flex-1">
-                            {/* Activity Header */}
-                            <View className="flex-row justify-between items-start">
-                              <View className="flex-row items-start flex-1">
-                                <View className="mr-3 mt-1">
-                                  <activityIcon.Component 
-                                    name={activityIcon.name as any}
-                                    size={20} 
-                                    color={activityIcon.color} 
-                                  />
-                                </View>
-                                <View className="flex-1">
-                                  <Text className="text-gray-800 text-lg font-bold mb-1">
-                                    {activity.name}
-                                  </Text>
-                                  <Text className="text-gray-600 text-sm">
-                                    {activity.description}
-                                  </Text>
-                                </View>
-                              </View>
-                              
-                              <View className="bg-green-800 px-2 py-1 rounded-full">
-                                <Text className="text-white font-bold">${activity.cost || 0}</Text>
-                              </View>
-                            </View>
-                            
-                            {/* Tags Section */}
-                            {activity.tags && activity.tags.length > 0 && (
-                              <View className="flex-row flex-wrap mt-2">
-                                {activity.tags.map((tag, index) => (
-                                  <View key={index} className="bg-gray-200 rounded-full px-2 py-1 mr-2 mb-2">
-                                    <Text className="text-xs text-gray-700">#{tag}</Text>
-                                  </View>
-                                ))}
-                              </View>
-                            )}
-                          </View>
-                          
-                          {/* Line separator */}
-                          <View className="border-t border-gray-200 my-3"></View>
-                          
-                          {/* Activity Actions - improved spacing */}
-                          <View className="flex-row items-center">
-                            <TouchableOpacity className="mr-3 p-1" 
-                              onPress={() => {
-                                console.log(`Map button clicked for ${activity.name} (${activity.id})`);
-                                router.push({
-                                  pathname: "/destination/map" as any,
-                                  params: {
-                                    lat: activity.location.lat,
-                                    lng: activity.location.lng,
-                                    name: activity.name,
-                                    id: activity.id,
-                                    type: activity.type,
-                                    description: activity.description,
-                                    imageUrl: activity.imageUrl,
-                                  },
-                                });
-                              }}
-                            >
-                              <Ionicons name="bookmark" size={18} color="#666" />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity className="mr-3 p-1"
-                              onPress={() => {
-                                DeleteActivity(activity.id);
-                                console.log(`Delete button clicked for ${activity.name} (${activity.id})`);
-                              }}
-                            >
-                              <MaterialIcons name="delete" size={18} color="#666" />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity className="mr-2 flex-row items-center p-1"
-                              onPress={() => {
-                                toggleUpvote(activity.id);
-                                console.log(`Upvote button clicked for ${activity.name} (${activity.id})`);
-                              }}
-                            >
-                              <Ionicons name="thumbs-up" size={18} color={upvoted[activity.id] ? "#3B82F6" : "#333"} />
-                              <Text className="ml-1">{activityUpvoteCount}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity className="flex-row items-center p-1"
-                              onPress={() => {
-                                toggleDownvote(activity.id);
-                                console.log(`Downvote button clicked for ${activity.name} (${activity.id})`);
-                              }}
-                            >
-                              <Ionicons name="thumbs-down" size={18} color={downvoted[activity.id] ? "#EF4444" : "#333"} />
-                              <Text className="ml-1">{activityDownvoteCount}</Text>
-                            </TouchableOpacity>
-                            <View className="flex-grow items-end">
-                              <TouchableOpacity
-                                className="p-1"
-                                onPress={() => {
-                                  console.log(`explore button clicked for ${activity.name} (${activity.id})`)
-                                  router.push({
-                                    pathname: '/destination/activity/[activityId]' as any,
-                                    params: { 
-                                      id: destinationId,
-                                      activityId: activity.id
-                                    }
-                                  });
-                                }}
-                              >
-                                <MaterialIcons name="travel-explore" size={18} color="#666" />
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-                        </View>
-                      </View>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-
-              {/* Day Summary remains unchanged */}
-              <View className="flex-row justify-between items-center py-3 px-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
-                <View className="flex-row items-center">
-                  <Ionicons name="time" size={18} color="#666" />
-                  <Text className="text-gray-600 text-sm ml-1">
-                    {day.activitys.length} {day.activitys.length === 1 ? 'activity' : 'activities'}
-                  </Text>
-                </View>
-                <View className="flex-row items-center">
-                  {/* Display count for each type of activity */}
-                  {Object.keys(activityCounts).map((type) => {
-                    const icon = getActivityIcon(type);
-                    return (
-                      <View key={type} className="flex-row items-center ml-3">
-                        <icon.Component name={icon.name as any} size={18} color={icon.color} />
-                        <Text className="text-gray-600 text-sm ml-1">{activityCounts[type]}</Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
-            </View>
-          </View>
-        );
-      })}
     </View>
+  );
+};
+
+export const ActivityList: React.FC<ActivityListProps> = ({ days, destinationId }) => {
+  const { itinerary, toggleUpvote, toggleDownvote, DeleteActivity, upvoted, downvoted } = useItineraryStore();
+  const { colors } = useTheme();
+  const [selectedDay, setSelectedDay] = useState(0);
+
+  const handleActivityPress = (activityId: string) => {
+    router.push(`/(protected)/destination/activity/${activityId}`);
+  };
+
+  const handleUpvote = (activityId: string, e: any) => {
+    e.stopPropagation();
+    toggleUpvote(activityId);
+  };
+
+  const handleDownvote = (activityId: string, e: any) => {
+    e.stopPropagation();
+    toggleDownvote(activityId);
+  };
+
+  const handleDelete = (activityId: string, e: any) => {
+    e.stopPropagation();
+    DeleteActivity(activityId);
+  };
+
+  if (!days.length) {
+    return (
+      <View style={{
+        paddingVertical: 48,
+        alignItems: 'center'
+      }}>
+        <MaterialIcons name="event-busy" size={48} color={colors.textSecondary || '#666'} />
+        <Text 
+          style={{ 
+            fontSize: 18,
+            fontWeight: '600',
+            marginTop: 16,
+            marginBottom: 8,
+            color: colors.text || '#000'
+          }}
+        >
+          No Activities Planned
+        </Text>
+        <Text 
+          style={{ 
+            textAlign: 'center',
+            color: colors.textSecondary || '#666'
+          }}
+        >
+          Activities will appear here once the itinerary is created
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <Animated.View 
+      entering={FadeInUp.delay(400).duration(600)}
+      style={{ paddingBottom: 24 }}
+    >
+      {/* Medium-sized Header with Gradient */}
+      <LinearGradient
+        colors={[colors.primary || '#000', colors.electric || '#000']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          paddingHorizontal: 24,
+          paddingVertical: 24
+        }}
+      >
+        <Animated.View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View 
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: 12,
+              backgroundColor: 'rgba(255,255,255,0.15)'
+            }}
+          >
+            <MaterialIcons name="event" size={24} color={colors.textInverse || '#fff'} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{
+              color: colors.textInverse || '#fff',
+              fontSize: 20,
+              fontWeight: 'bold',
+              marginBottom: 2
+            }}>
+              Daily Activities
+            </Text>
+            <Text style={{
+              color: 'rgba(255,255,255,0.8)',
+              fontSize: 14
+            }}>
+              <Text>{String(days.length)}</Text>
+              <Text> day</Text>
+              <Text>{days.length !== 1 ? 's' : ''}</Text>
+              <Text> planned</Text>
+            </Text>
+          </View>
+          <Pressable 
+            style={{
+              padding: 6,
+              borderRadius: 9999,
+              backgroundColor: 'rgba(255,255,255,0.10)'
+            }}
+          >
+            <MaterialIcons name="calendar-today" size={18} color={colors.textInverse || '#fff'} />
+          </Pressable>
+        </Animated.View>
+      </LinearGradient>
+
+      {/* Content Card */}
+      <View style={{ padding: 24 }}>
+        {/* Day Selector */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 4 }}
+          style={{
+            marginBottom: 16,
+            borderRadius: 16,
+            overflow: 'hidden',
+            backgroundColor: colors.backgroundSecondary || '#f5f5f5'
+          }}
+        >
+          {days.map((day, index) => (
+            <Pressable
+              key={day.id}
+              onPress={() => setSelectedDay(index)}
+              style={{ marginRight: 12 }}
+            >
+              <LinearGradient
+                colors={
+                  selectedDay === index
+                    ? [colors.primary || '#000', colors.electric || '#000']
+                    : [colors.surface || '#fff', colors.surface || '#fff']
+                }
+                style={{
+                  borderRadius: 16,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  minWidth: 100,
+                  alignItems: 'center',
+                  borderWidth: selectedDay === index ? 0 : 1,
+                  borderColor: colors.border || '#ddd'
+                }}
+              >
+                <Text 
+                  style={{ 
+                    fontWeight: 'bold',
+                    fontSize: 14,
+                    color: selectedDay === index ? (colors.textInverse || '#fff') : (colors.text || '#000')
+                  }}
+                >
+                  <Text>Day </Text>
+                  <Text>{String(day.day)}</Text>
+                </Text>
+                <Text 
+                  style={{ 
+                    fontSize: 12,
+                    marginTop: 4,
+                    color: selectedDay === index ? 'rgba(255,255,255,0.8)' : (colors.textSecondary || '#666')
+                  }}
+                >
+                  <Text>{String(day.activities.length)}</Text>
+                  <Text> activities</Text>
+                </Text>
+              </LinearGradient>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        {/* Selected Day Content */}
+        {days[selectedDay] && (
+          <Animated.View 
+            key={selectedDay}
+            entering={FadeInRight.duration(400)}
+            style={{ gap: 16 }}
+          >
+            {/* Day Title */}
+            <View 
+              style={{
+                borderRadius: 16,
+                padding: 16,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 8,
+                elevation: 6,
+                overflow: 'hidden',
+                backgroundColor: colors.backgroundSecondary || '#f5f5f5'
+              }}
+            >
+              <Text 
+                style={{
+                  fontSize: 20,
+                  fontWeight: 'bold',
+                  marginBottom: 4,
+                  color: colors.text || '#000'
+                }}
+              >
+                {String(days[selectedDay].title)}
+              </Text>
+              <Text 
+                style={{
+                  fontSize: 14,
+                  color: colors.textSecondary || '#666'
+                }}
+              >
+                <Text>Day </Text>
+                <Text>{String(days[selectedDay].day)}</Text>
+                <Text> • </Text>
+                <Text>{String(days[selectedDay].activities.length)}</Text>
+                <Text> activities planned</Text>
+              </Text>
+            </View>
+
+            {/* Weather for the day */}
+            {itinerary?.ItineraryDays?.[selectedDay]?.weather?.[0] && (
+              <WeatherWidget weather={itinerary.ItineraryDays[selectedDay].weather[0]} />
+            )}
+
+            {/* Activities with Hero Image Design */}
+            <View style={{ gap: 16 }}>
+              {days[selectedDay].activities.map((activity, index) => (
+                <Animated.View
+                  key={activity.id}
+                  entering={FadeInRight.delay(index * 100).duration(500)}
+                >
+                  <TouchableOpacity
+                    onPress={() => handleActivityPress(activity.id)}
+                    activeOpacity={0.7}
+                    style={{
+                      borderRadius: 20,
+                      overflow: 'hidden',
+                      backgroundColor: colors.surface || '#fff',
+                      shadowColor: colors.text || '#000',
+                      shadowOffset: { width: 0, height: 8 },
+                      shadowOpacity: 0.12,
+                      shadowRadius: 16,
+                      elevation: 8
+                    }}
+                  >
+                    {/* Hero Image Section */}
+                    <View style={{ position: 'relative', height: 200 }}>
+                      <Image
+                        source={{ uri: activity.imageUrl }}
+                        style={{ width: '100%', height: '100%' }}
+                        resizeMode="cover"
+                      />
+                      
+                      {/* Gradient Overlay */}
+                      <LinearGradient
+                        colors={['transparent', 'rgba(0,0,0,0.7)']}
+                        style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          height: '60%'
+                        }}
+                      />
+                      
+                      {/* Activity Type Icon */}
+                      <View style={{ position: 'absolute', top: 12, left: 12 }}>
+                        <ActivityTypeIcon type={activity.type} />
+                      </View>
+                      
+                      {/* Rating Badge */}
+                      <View style={{ 
+                        position: 'absolute', 
+                        top: 12, 
+                        right: 12,
+                        backgroundColor: 'rgba(255,255,255,0.25)',
+                        backdropFilter: 'blur(10px)',
+                        borderRadius: 16,
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        flexDirection: 'row',
+                        alignItems: 'center'
+                      }}>
+                        <MaterialIcons name="star" size={16} color="#FFD700" />
+                        <Text style={{
+                          marginLeft: 4,
+                          fontWeight: '600',
+                          fontSize: 14,
+                          color: '#fff'
+                        }}>
+                          {String(activity.rating)}
+                        </Text>
+                      </View>
+                      
+                      {/* Activity Title and Description in Hero */}
+                      <View style={{ 
+                        position: 'absolute', 
+                        bottom: 16, 
+                        left: 16, 
+                        right: 16 
+                      }}>
+                        <Text 
+                          style={{ 
+                            color: '#fff',
+                            fontSize: 20,
+                            fontWeight: 'bold',
+                            marginBottom: 4,
+                            textShadowColor: 'rgba(0,0,0,0.5)',
+                            textShadowOffset: { width: 0, height: 1 },
+                            textShadowRadius: 3
+                          }}
+                          numberOfLines={2}
+                        >
+                          {String(activity.name)}
+                        </Text>
+                        <Text 
+                          style={{ 
+                            color: 'rgba(255,255,255,0.9)',
+                            fontSize: 14,
+                            textShadowColor: 'rgba(0,0,0,0.5)',
+                            textShadowOffset: { width: 0, height: 1 },
+                            textShadowRadius: 3
+                          }}
+                          numberOfLines={2}
+                        >
+                          {String(activity.description)}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Content Section */}
+                    <View style={{ padding: 16 }}>
+                      {/* Activity Details Row */}
+                      <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: 12
+                      }}>
+                        {activity.cost && (
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <MaterialIcons name="attach-money" size={16} color={colors.success || '#10b981'} />
+                            <Text style={{
+                              color: colors.success || '#10b981',
+                              fontWeight: '600',
+                              fontSize: 14
+                            }}>
+                              <Text>$</Text>
+                              <Text>{String(activity.cost)}</Text>
+                            </Text>
+                          </View>
+                        )}
+
+                        {activity.duration && (
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <MaterialIcons name="access-time" size={16} color={colors.textSecondary || '#666'} />
+                            <Text style={{
+                              marginLeft: 4,
+                              fontSize: 14,
+                              color: colors.textSecondary || '#666'
+                            }}>
+                              {String(activity.duration)}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Opening Hours */}
+                      {activity.openingHours && (
+                        <View style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          marginBottom: 12
+                        }}>
+                          <MaterialIcons name="schedule" size={14} color={colors.textSecondary || '#666'} />
+                          <Text style={{
+                            marginLeft: 4,
+                            fontSize: 12,
+                            color: colors.textSecondary || '#666'
+                          }}>
+                            {String(activity.openingHours.join(' - '))}
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* Tags */}
+                      {activity.tags && activity.tags.length > 0 && (
+                        <ScrollView 
+                          horizontal 
+                          showsHorizontalScrollIndicator={false}
+                          style={{ marginBottom: 16 }}
+                        >
+                          {activity.tags.slice(0, 3).map((tag, tagIndex) => (
+                            <View 
+                              key={tagIndex}
+                              style={{
+                                paddingHorizontal: 10,
+                                paddingVertical: 6,
+                                borderRadius: 12,
+                                marginRight: 8,
+                                backgroundColor: `${colors.primary || '#000'}15`,
+                                borderWidth: 1,
+                                borderColor: `${colors.primary || '#000'}25`
+                              }}
+                            >
+                              <Text style={{
+                                fontSize: 12,
+                                fontWeight: '500',
+                                color: colors.primary || '#000'
+                              }}>
+                                <Text>#</Text>
+                                <Text>{String(tag)}</Text>
+                              </Text>
+                            </View>
+                          ))}
+                        </ScrollView>
+                      )}
+
+                      {/* Action Buttons */}
+                      <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        gap: 8
+                      }}>
+                        <TouchableOpacity
+                          onPress={(e) => handleUpvote(activity.id, e)}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 16,
+                            backgroundColor: upvoted[activity.id] ? `${colors.success || '#10b981'}20` : (colors.backgroundSecondary || '#f5f5f5'),
+                            borderWidth: 1,
+                            borderColor: upvoted[activity.id] ? (colors.success || '#10b981') : 'transparent'
+                          }}
+                        >
+                          <MaterialIcons 
+                            name="thumb-up" 
+                            size={16} 
+                            color={upvoted[activity.id] ? (colors.success || '#10b981') : (colors.textSecondary || '#666')} 
+                          />
+                          <Text 
+                            style={{
+                              marginLeft: 4,
+                              fontSize: 12,
+                              fontWeight: '600',
+                              color: upvoted[activity.id] ? (colors.success || '#10b981') : (colors.textSecondary || '#666')
+                            }}
+                          >
+                            Like
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={(e) => handleDownvote(activity.id, e)}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 16,
+                            backgroundColor: downvoted[activity.id] ? `${colors.error || '#ef4444'}20` : (colors.backgroundSecondary || '#f5f5f5'),
+                            borderWidth: 1,
+                            borderColor: downvoted[activity.id] ? (colors.error || '#ef4444') : 'transparent'
+                          }}
+                        >
+                          <MaterialIcons 
+                            name="thumb-down" 
+                            size={16} 
+                            color={downvoted[activity.id] ? (colors.error || '#ef4444') : (colors.textSecondary || '#666')} 
+                          />
+                          <Text 
+                            style={{
+                              marginLeft: 4,
+                              fontSize: 12,
+                              fontWeight: '600',
+                              color: downvoted[activity.id] ? (colors.error || '#ef4444') : (colors.textSecondary || '#666')
+                            }}
+                          >
+                            Dislike
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={(e) => handleDelete(activity.id, e)}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 16,
+                            backgroundColor: `${colors.error || '#ef4444'}15`,
+                            borderWidth: 1,
+                            borderColor: `${colors.error || '#ef4444'}25`
+                          }}
+                        >
+                          <MaterialIcons name="delete-outline" size={16} color={colors.error || '#ef4444'} />
+                          <Text style={{
+                            marginLeft: 4,
+                            fontSize: 12,
+                            fontWeight: '600',
+                            color: colors.error || '#ef4444'
+                          }}>
+                            Remove
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+              ))}
+            </View>
+          </Animated.View>
+        )}
+      </View>
+
+      {/* Bottom Accent */}
+      <LinearGradient
+        colors={['transparent', `${colors.electric || '#000'}33`]}
+        style={{ height: 4 }}
+      />
+    </Animated.View>
   );
 };
