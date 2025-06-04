@@ -3,9 +3,9 @@ import { View, Text, ScrollView, SafeAreaView, TouchableOpacity } from 'react-na
 import { Stack, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChatRoomCard } from '../../../components/ui';
-import { useTheme } from '../../../contexts/ThemeContext';
-import { useChatStore } from '../../../store/chatStore';
+import { ChatRoomCard } from '~/components/ui';
+import { useTheme } from '~/contexts/ThemeContext';
+import { useChatStore } from '~/store/chatStore';
 
 // Mock data for quests
 const mockQuests = [
@@ -142,8 +142,7 @@ export default function CommunityScreen() {
                 letterSpacing: 0.5,
               }}
             >
-              <Text>{quest.points}</Text>
-              <Text> pts</Text>
+              {quest.points} pts
             </Text>
           </LinearGradient>
         </View>
@@ -160,7 +159,7 @@ export default function CommunityScreen() {
                 letterSpacing: 1,
               }}
             >
-              <Text>Progress</Text>
+              Progress
             </Text>
             <Text 
               style={{ 
@@ -169,9 +168,7 @@ export default function CommunityScreen() {
                 fontWeight: '700',
               }}
             >
-              <Text>{quest.progress}</Text>
-              <Text>/</Text>
-              <Text>{quest.total}</Text>
+              {quest.progress}/{quest.total}
             </Text>
           </View>
           
@@ -237,8 +234,7 @@ export default function CommunityScreen() {
                 marginBottom: 4,
               }}
             >
-              <Text>Community</Text>
-              <Text style={{ color: colors.neon }}>.</Text>
+              Community<Text style={{ color: colors.neon }}>.</Text>
             </Text>
             <Text 
               style={{ 
@@ -247,7 +243,7 @@ export default function CommunityScreen() {
                 fontWeight: '500',
               }}
             >
-              <Text>Connect with fellow travelers ✨</Text>
+              Connect with fellow travelers ✨
             </Text>
           </View>
         </View>
@@ -277,11 +273,7 @@ export default function CommunityScreen() {
               color: colors.text
             }}
           >
-            {showQuests ? (
-              <Text>Your Quests</Text>
-            ) : (
-              <Text>Chat Rooms</Text>
-            )}
+            {showQuests ? 'Your Quests' : 'Chat Rooms'}
           </Text>
         </View>
         
@@ -316,11 +308,7 @@ export default function CommunityScreen() {
                 letterSpacing: 0.5,
               }}
             >
-              {showQuests ? (
-                <Text>Chat Rooms</Text>
-              ) : (
-                <Text>Quests</Text>
-              )}
+              {showQuests ? 'Chat Rooms' : 'Quests'}
             </Text>
             <MaterialIcons 
               name={showQuests ? 'chat' : 'emoji-events'} 
@@ -371,14 +359,14 @@ export default function CommunityScreen() {
                   color: colors.text,
                   marginBottom: 4,
                 }}>
-                  <Text>Level Up Your Journey</Text>
+                  Level Up Your Journey
                 </Text>
                 <Text style={{ 
                   color: colors.textSecondary, 
                   fontSize: 14, 
                   fontWeight: '500' 
                 }}>
-                  <Text>Complete quests to earn points and unlock rewards</Text>
+                  Complete quests to earn points and unlock rewards
                 </Text>
               </View>
             </View>
@@ -412,14 +400,14 @@ export default function CommunityScreen() {
                   color: colors.text,
                   marginBottom: 4,
                 }}>
-                  <Text>Join the Conversation</Text>
+                  Join the Conversation
                 </Text>
                 <Text style={{ 
                   color: colors.textSecondary, 
                   fontSize: 14, 
                   fontWeight: '500' 
                 }}>
-                  <Text>Connect with travelers around the world</Text>
+                  Connect with travelers around the world
                 </Text>
               </View>
             </View>
