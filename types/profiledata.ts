@@ -2,7 +2,7 @@
 import type { UserProfile } from './profile.types';
 
 export const mockUserProfile: Record<string, UserProfile> = {
-  '1': {
+  'user123': {
     id: 'user123',
     username: 'john_doe',
     email: 'demo@travelco.com',
@@ -58,8 +58,8 @@ export const mockUserProfile: Record<string, UserProfile> = {
     },
   },
 
-  '2': {
-    id: '2',
+  'user456': {
+    id: 'user456',
     username: 'jane_doe',
     email: 'demo2@travelco.com',
     phone: '',
@@ -114,8 +114,8 @@ export const mockUserProfile: Record<string, UserProfile> = {
     },
   },
 
-  '3': {
-    id: '3',
+  'user789': {
+    id: 'user789',
     username: 'mark_smith',
     email: 'demo3@travelco.com',
     phone: '',

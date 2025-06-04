@@ -7,6 +7,7 @@ import { useCurrentProfile } from '~/store/ProfileStore';
 import QRCode from 'react-native-qrcode-svg';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
+import { useTheme } from '~/contexts/ThemeContext';
 
 // Define a type for the QR code ref that includes the toDataURL method
 type QRCodeRef = {
@@ -14,6 +15,7 @@ type QRCodeRef = {
 };
 
 export default function ShareProfile() {
+  const { colors, isDark } = useTheme();
   const profile = useCurrentProfile();
   const [saving, setSaving] = useState(false);
   const [qrRef, setQrRef] = useState<QRCodeRef | null>(null);
@@ -26,13 +28,16 @@ export default function ShareProfile() {
   // Handle share button
   const handleShare = async () => {
     try {
+      const shareMessage = `Check out my travel profile: ${profileUrl}`;
+      const shareTitle = profile?.name ? `${profile.name}'s Travel Profile` : 'Travel Profile';
+      
       await Share.share({
-        message: `Check out my travel profile: ${profileUrl}`,
+        message: shareMessage,
         url: profileUrl, // iOS only
-        title: `${profile?.name}'s Travel Profile` // Android only
+        title: shareTitle // Android only
       });
-    } catch (_) {
-      // Using underscore to indicate we're not using the error variable
+    } catch {
+      // Handle error properly
       Alert.alert('Error', 'Something went wrong while sharing');
     }
   };
@@ -60,7 +65,8 @@ export default function ShareProfile() {
       
       // Get QR code as SVG - fixed typing
       qrRef.toDataURL(async (dataURL: string) => {
-        const fileUri = FileSystem.documentDirectory + `${profile?.username || 'profile'}-qr.png`;
+        const fileName = `${profile?.username || 'profile'}-qr.png`;
+        const fileUri = FileSystem.documentDirectory + fileName;
         
         // Write file
         await FileSystem.writeAsStringAsync(fileUri, dataURL, {
@@ -74,8 +80,8 @@ export default function ShareProfile() {
         setSaving(false);
         Alert.alert('Success', 'QR code saved to your gallery!');
       });
-    } catch (_) {
-      // Using underscore to indicate we're not using the error variable
+    } catch {
+      // Handle error properly
       setSaving(false);
       Alert.alert('Error', 'Failed to save QR code');
     }
@@ -83,114 +89,359 @@ export default function ShareProfile() {
   
   if (!profile) {
     return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center">
-        <Text>Loading profile...</Text>
+      <SafeAreaView style={{ 
+        flex: 1, 
+        backgroundColor: colors.background || '#fff',
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <Text style={{ color: colors.text || '#000' }}>Loading profile...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background || '#fff' }}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      {/* Header */}
-      <View className="px-4 py-5 border-b border-gray-200 flex-row items-center">
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color="#333" />
+      {/* Modern Header */}
+      <View style={{
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border || '#ddd',
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.surface || '#f5f5f5'
+      }}>
+        <TouchableOpacity 
+          style={{
+            backgroundColor: colors.primary || '#000',
+            padding: 12,
+            borderRadius: 16,
+            shadowColor: colors.text || '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 8,
+            elevation: 4
+          }}
+          onPress={() => router.back()}
+        >
+          <MaterialIcons name="arrow-back" size={20} color={colors.textInverse || '#fff'} />
         </TouchableOpacity>
-        <Text className="text-xl font-semibold text-center flex-1">PROFILE QR</Text>
-        <View style={{ width: 24 }} />
+        <Text style={{
+          fontSize: 24,
+          fontWeight: '900',
+          textAlign: 'center',
+          flex: 1,
+          marginLeft: 16,
+          color: colors.text || '#000'
+        }}>
+          <Text>Share Your Vibe</Text>
+          <Text style={{ color: colors.accent || '#000' }}>.</Text>
+        </Text>
+        <View style={{ width: 44 }} />
       </View>
       
-      <ScrollView className="flex-1 px-4">
-        {/* Profile Info */}
-        <View className="items-center mt-6">
-          <Image 
-            source={{ uri: profile.avatar }} 
-            className="w-20 h-20 rounded-full"
-          />
-          <Text className="text-xl font-bold mt-3">{profile.name}</Text>
-          <Text className="text-base text-teal-500">@{profile.username}</Text>
+      <ScrollView style={{ flex: 1, paddingHorizontal: 24, paddingTop: 32 }} showsVerticalScrollIndicator={false}>
+        {/* Enhanced Profile Info */}
+        <View style={{ alignItems: 'center', marginBottom: 32 }}>
+          <View style={{ position: 'relative' }}>
+            <Image 
+              source={{ uri: profile.avatar }} 
+              style={{
+                width: 128,
+                height: 128,
+                borderRadius: 24,
+                borderWidth: 4,
+                borderColor: colors.surface || '#f5f5f5',
+                shadowColor: colors.text || '#000',
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.25,
+                shadowRadius: 16
+              }}
+            />
+            {/* Status indicator */}
+            <View style={{
+              position: 'absolute',
+              bottom: -4,
+              right: -4,
+              width: 32,
+              height: 32,
+              backgroundColor: colors.success || '#10b981',
+              borderRadius: 16,
+              borderWidth: 3,
+              borderColor: colors.surface || '#f5f5f5',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <View style={{
+                width: 12,
+                height: 12,
+                backgroundColor: colors.surface || '#f5f5f5',
+                borderRadius: 6
+              }} />
+            </View>
+          </View>
           
-          {/* Badges */}
-          <View className="flex-row mt-3 space-x-2">
+          <Text style={{
+            fontSize: 32,
+            fontWeight: '900',
+            marginTop: 24,
+            color: colors.text || '#000'
+          }}>
+            {String(profile.name)}
+          </Text>
+          <Text style={{
+            fontSize: 20,
+            color: colors.accent || '#000',
+            fontWeight: 'bold'
+          }}>
+            <Text>@</Text>
+            <Text>{String(profile.username)}</Text>
+          </Text>
+          
+          {/* Enhanced Badges */}
+          <View style={{ flexDirection: 'row', marginTop: 20, gap: 12 }}>
             {profile.isPremium && (
-              <View className="bg-yellow-100 px-3 py-1 rounded-full flex-row items-center">
-                <MaterialIcons name="star" size={16} color="#F59E0B" />
-                <Text className="text-yellow-700 ml-1 font-medium">Premium</Text>
+              <View style={{
+                backgroundColor: colors.primary || '#000',
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                flexDirection: 'row',
+                alignItems: 'center',
+                shadowColor: colors.text || '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.15,
+                shadowRadius: 8,
+                elevation: 4
+              }}>
+                <MaterialIcons name="star" size={18} color={colors.textInverse || '#fff'} />
+                <Text style={{
+                  color: colors.textInverse || '#fff',
+                  marginLeft: 8,
+                  fontWeight: '900'
+                }}>
+                  Premium
+                </Text>
               </View>
             )}
             {profile.isSubscribed && (
-              <View className="bg-green-100 px-3 py-1 rounded-full flex-row items-center">
-                <MaterialIcons name="check-circle" size={16} color="#10B981" />
-                <Text className="text-green-700 ml-1 font-medium">Subscribed</Text>
+              <View style={{
+                backgroundColor: colors.success || '#10b981',
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                flexDirection: 'row',
+                alignItems: 'center',
+                shadowColor: colors.text || '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.15,
+                shadowRadius: 8,
+                elevation: 4
+              }}>
+                <MaterialIcons name="check-circle" size={18} color={colors.textInverse || '#fff'} />
+                <Text style={{
+                  color: colors.textInverse || '#fff',
+                  marginLeft: 8,
+                  fontWeight: '900'
+                }}>
+                  Insider
+                </Text>
               </View>
             )}
           </View>
         </View>
         
-        {/* QR Code */}
-        <View className="items-center justify-center mt-8 bg-white rounded-xl p-6 mx-4 shadow-sm border border-gray-100">
-          <View className="bg-white p-4 rounded-xl border-2 border-teal-100">
-            <QRCode
-              value={profileUrl}
-              size={200}
-              color="#0F766E"
-              backgroundColor="white"
-              logo={{uri: profile.avatar}}
-              logoSize={40}
-              logoBackgroundColor="white"
-              logoMargin={5}
-              logoBorderRadius={20}
-              getRef={(ref) => setQrRef(ref as unknown as QRCodeRef)}
-            />
+        {/* Enhanced QR Code Section */}
+        <View style={{
+          backgroundColor: colors.surface || '#f5f5f5',
+          borderRadius: 24,
+          padding: 32,
+          marginHorizontal: 8,
+          shadowColor: colors.text || '#000',
+          shadowOffset: { width: 0, height: 12 },
+          shadowOpacity: 0.15,
+          shadowRadius: 20,
+          elevation: 12,
+          borderWidth: 1,
+          borderColor: colors.border || '#ddd',
+          marginBottom: 32
+        }}>
+          <View style={{ alignItems: 'center' }}>
+            <View style={{
+              backgroundColor: isDark ? (colors.background || '#000') : `${colors.accent || '#000'}10`,
+              padding: 24,
+              borderRadius: 24,
+              borderWidth: 2,
+              borderColor: isDark ? (colors.border || '#333') : `${colors.accent || '#000'}20`,
+              shadowColor: colors.text || '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4
+            }}>
+              <QRCode
+                value={profileUrl}
+                size={220}
+                color={colors.text || '#000'}
+                backgroundColor={colors.surface || '#f5f5f5'}
+                logo={{uri: profile.avatar}}
+                logoSize={50}
+                logoBackgroundColor={colors.surface || '#f5f5f5'}
+                logoMargin={8}
+                logoBorderRadius={25}
+                getRef={(ref) => setQrRef(ref as unknown as QRCodeRef)}
+              />
+            </View>
+            
+            <Text style={{
+              color: colors.accent || '#000',
+              marginTop: 24,
+              fontSize: 20,
+              textAlign: 'center',
+              fontWeight: '900'
+            }}>
+              <Text>Scan to connect </Text>
+              <Text>✨</Text>
+            </Text>
+            <Text style={{
+              color: colors.textSecondary || '#666',
+              fontSize: 14,
+              textAlign: 'center',
+              marginTop: 8,
+              fontWeight: '500'
+            }}>
+              {String(profileUrl)}
+            </Text>
           </View>
-          <Text className="text-teal-500 mt-5 text-lg text-center">
-            Scan this code to view my profile
-          </Text>
-          <Text className="text-gray-500 text-sm text-center mt-1">
-            {profileUrl}
-          </Text>
         </View>
         
-        {/* Action Buttons */}
-        <View className="flex-row justify-between mt-8 mb-6 px-6">
-          <TouchableOpacity className="items-center" onPress={handleShare}>
-            <View className="w-14 h-14 rounded-full bg-gray-100 items-center justify-center mb-2">
-              <MaterialIcons name="share" size={24} color="#10B981" />
+        {/* Enhanced Action Buttons */}
+        <View style={{
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          marginBottom: 32,
+          paddingHorizontal: 16
+        }}>
+          <TouchableOpacity 
+            style={{ alignItems: 'center' }}
+            onPress={handleShare}
+          >
+            <View style={{
+              width: 64,
+              height: 64,
+              backgroundColor: colors.primary || '#000',
+              borderRadius: 16,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 12,
+              shadowColor: colors.text || '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4
+            }}>
+              <MaterialIcons name="share" size={28} color={colors.textInverse || '#fff'} />
             </View>
-            <Text className="text-gray-700">Share</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity className="items-center" onPress={handleCopyLink}>
-            <View className="w-14 h-14 rounded-full bg-gray-100 items-center justify-center mb-2">
-              <MaterialIcons name="link" size={24} color="#10B981" />
-            </View>
-            <Text className="text-gray-700">Copy link</Text>
+            <Text style={{ color: colors.text || '#000', fontWeight: 'bold' }}>Share</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            className="items-center" 
+            style={{ alignItems: 'center' }}
+            onPress={handleCopyLink}
+          >
+            <View style={{
+              width: 64,
+              height: 64,
+              backgroundColor: colors.accent || '#000',
+              borderRadius: 16,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 12,
+              shadowColor: colors.text || '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4
+            }}>
+              <MaterialIcons name="link" size={28} color={colors.textInverse || '#fff'} />
+            </View>
+            <Text style={{ color: colors.text || '#000', fontWeight: 'bold' }}>Copy Link</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={{ alignItems: 'center' }}
             onPress={handleDownload}
             disabled={saving}
           >
-            <View className="w-14 h-14 rounded-full bg-gray-100 items-center justify-center mb-2">
+            <View style={{
+              width: 64,
+              height: 64,
+              borderRadius: 16,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 12,
+              shadowColor: colors.text || '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4,
+              backgroundColor: saving ? (colors.textTertiary || '#999') : (colors.neon || '#000')
+            }}>
               <MaterialIcons 
                 name={saving ? "hourglass-empty" : "file-download"} 
-                size={24} 
-                color="#10B981" 
+                size={28} 
+                color={colors.textInverse || '#fff'}
               />
             </View>
-            <Text className="text-gray-700">{saving ? "Saving..." : "Download"}</Text>
+            <Text style={{ color: colors.text || '#000', fontWeight: 'bold' }}>
+              {saving ? 'Saving...' : 'Download'}
+            </Text>
           </TouchableOpacity>
         </View>
         
-        {/* Instructions */}
-        <View className="bg-gray-50 p-5 rounded-lg mb-10 mx-2">
-          <Text className="text-xl font-semibold text-gray-700 mb-3">How to use</Text>
-          <Text className="text-gray-600 leading-6">
-            Share your profile QR code with friends, or scan someone else&rsquo;s code to connect. 
-            This makes it easy to find and follow each other on our travel platform.
+        {/* Enhanced Instructions */}
+        <View style={{
+          backgroundColor: isDark ? (colors.surface || '#333') : `${colors.electric || '#000'}05`,
+          padding: 24,
+          borderRadius: 24,
+          marginBottom: 40,
+          marginHorizontal: 8,
+          borderWidth: 1,
+          borderColor: isDark ? (colors.border || '#444') : `${colors.electric || '#000'}20`,
+          shadowColor: colors.text || '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 8,
+          elevation: 4
+        }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{
+              backgroundColor: colors.electric || '#000',
+              padding: 8,
+              borderRadius: 16,
+              marginRight: 12
+            }}>
+              <MaterialIcons name="info" size={20} color={colors.textInverse || '#fff'} />
+            </View>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: '900',
+              color: colors.text || '#000'
+            }}>
+              <Text>How to Connect </Text>
+              <Text>✨</Text>
+            </Text>
+          </View>
+          <Text style={{
+            color: colors.textSecondary || '#666',
+            lineHeight: 24,
+            fontWeight: '500'
+          }}>
+            Share your QR code with fellow travelers or scan theirs to instantly connect! 
+            Building your travel network has never been easier. Let&rsquo;s explore the world together! 🌎
           </Text>
         </View>
       </ScrollView>

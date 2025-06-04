@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useProfileStore, useCurrentProfile } from '~/store/ProfileStore';
+import { useTheme } from '~/contexts/ThemeContext';
 
 export default function EditProfile() {
+  const { colors } = useTheme();
   const { updateProfile, addArrayItem, removeArrayItem, isLoading } = useProfileStore();
   const profile = useCurrentProfile();
   
@@ -73,137 +76,355 @@ export default function EditProfile() {
   // Early return if profile is not loaded
   if (!profile || !profile.id) {
     return (
-      <SafeAreaView className="flex-1 bg-quinary items-center justify-center">
-        <Text>Loading profile...</Text>
+      <SafeAreaView style={{ 
+        flex: 1, 
+        backgroundColor: colors.background, // theme background
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <Text style={{ color: colors.text }}>Loading profile...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-quinary">
+    <SafeAreaView style={{ 
+      flex: 1, 
+      backgroundColor: colors.background // backgroundGradient token equivalent
+    }}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      {/* Header */}
-      <View className="px-5 py-4 border-b border-primary/50 flex-row items-center">
+      {/* Modern Header */}
+      <View style={{
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border, // borderColor token
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.surface // headerBackground token
+      }}>
         <TouchableOpacity 
-          className="bg-primary/20 p-2 rounded-full shadow-sm backdrop-blur-lg" 
+          style={{
+            backgroundColor: colors.cyber, // primary button color
+            padding: 12,
+            borderRadius: 16,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 8
+          }}
           onPress={() => router.back()}
         >
-          <MaterialIcons name="arrow-back" size={22} color="#1E493B" />
+          <MaterialIcons name="arrow-back" size={20} color="white" />
         </TouchableOpacity>
-        <Text className="text-xl font-bold text-center flex-1 ml-2 text-tertiary">Edit Your Vibe ✨</Text>
-        <View style={{ width: 34 }} />
+        <Text style={{
+          fontSize: 24,
+          fontWeight: 'bold',
+          textAlign: 'center',
+          flex: 1,
+          marginLeft: 16,
+          color: colors.text // textPrimary token
+        }}>
+          Edit Your Vibe<Text style={{ color: colors.accent }}>.</Text>
+        </Text>
+        <View style={{ width: 44 }} />
       </View>
       
-      <ScrollView className="flex-1 px-5 pt-6">
-        {/* Profile Picture */}
-        <View className="items-center mb-8">
-          <View className="relative">
+      <ScrollView 
+        style={{ flex: 1, paddingHorizontal: 24, paddingTop: 32 }} 
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Enhanced Profile Picture */}
+        <View style={{ alignItems: 'center', marginBottom: 40 }}>
+          <View style={{ position: 'relative' }}>
             <Image 
               source={{ uri: formData.avatar || 'https://via.placeholder.com/150' }} 
-              className="w-32 h-32 rounded-full border-4 border-primary/80 shadow-xl"
+              style={{
+                width: 144,
+                height: 144,
+                borderRadius: 24,
+                borderWidth: 4,
+                borderColor: colors.surface,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.3,
+                shadowRadius: 16
+              }}
             />
             <TouchableOpacity 
-              className="absolute bottom-0 right-0 bg-quaternary rounded-full p-3 shadow-md"
+              style={{
+                position: 'absolute',
+                bottom: -8,
+                right: -8,
+                backgroundColor: colors.electric, // cyber gradient equivalent
+                borderRadius: 16,
+                padding: 16,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.4,
+                shadowRadius: 12,
+                elevation: 12
+              }}
               onPress={pickImage}
             >
-              <MaterialIcons name="camera-alt" size={18} color="white" />
+              <MaterialIcons name="camera-alt" size={20} color="white" />
             </TouchableOpacity>
           </View>
           <TouchableOpacity 
-            className="mt-3 px-5 py-2 bg-primary/30 rounded-full backdrop-blur-sm" 
+            style={{
+              marginTop: 16,
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+              backgroundColor: colors.neon, // neon gradient equivalent
+              borderRadius: 16,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8
+            }}
             onPress={pickImage}
           >
-            <Text className="text-quaternary font-semibold">Update photo</Text>
+            <Text style={{
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: 16
+            }}>✨ Update Photo</Text>
           </TouchableOpacity>
         </View>
         
-        {/* Profile Form */}
-        <View className="space-y-7">
-          {/* Name and Username Row */}
-          <View className="flex-row space-x-3">
+        {/* Enhanced Profile Form */}
+        <View style={{ gap: 32 }}>
+          {/* Enhanced Name and Username Row */}
+          <View style={{ flexDirection: 'row', gap: 16 }}>
             {/* Name */}
-            <View className="flex-1">
-              <Text className="text-quaternary font-semibold mb-2 flex-row items-center">
-                <MaterialIcons name="person" size={16} color="#1E493B" style={{marginRight: 4}} />
-                Name
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                color: colors.textSecondary, // textSecondary token
+                fontWeight: 'bold',
+                marginBottom: 12,
+                fontSize: 18
+              }}>
+                👤 Full Name
               </Text>
-              <TextInput
-                className="border border-primary rounded-xl py-3 px-4 text-base text-tertiary bg-primary/10 shadow-sm"
-                value={formData.name}
-                onChangeText={(text) => setFormData({...formData, name: text})}
-                placeholder="Your name"
-                placeholderTextColor="#1E493B50"
-              />
+              <View style={{
+                backgroundColor: colors.surface, // card background
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: colors.border,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                elevation: 8,
+                overflow: 'hidden'
+              }}>
+                <TextInput
+                  style={{
+                    paddingVertical: 16,
+                    paddingHorizontal: 20,
+                    fontSize: 16,
+                    color: colors.text,
+                    fontWeight: 'bold'
+                  }}
+                  value={formData.name}
+                  onChangeText={(text) => setFormData({...formData, name: text})}
+                  placeholder="Your awesome name"
+                  placeholderTextColor={colors.textTertiary}
+                />
+              </View>
             </View>
             
             {/* Username */}
-            <View className="flex-1">
-              <Text className="text-quaternary font-semibold mb-2 flex-row items-center">
-                <MaterialIcons name="alternate-email" size={16} color="#1E493B" style={{marginRight: 4}} />
-                Username
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                color: colors.textSecondary,
+                fontWeight: 'bold',
+                marginBottom: 12,
+                fontSize: 18
+              }}>
+                @ Username
               </Text>
-              <TextInput
-                className="border border-primary rounded-xl py-3 px-4 text-base text-tertiary bg-primary/10 shadow-sm"
-                value={formData.username}
-                onChangeText={(text) => setFormData({...formData, username: text})}
-                placeholder="@username"
-                placeholderTextColor="#1E493B50"
-              />
+              <View style={{
+                backgroundColor: colors.surface,
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: colors.border,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                elevation: 8,
+                overflow: 'hidden'
+              }}>
+                <TextInput
+                  style={{
+                    paddingVertical: 16,
+                    paddingHorizontal: 20,
+                    fontSize: 16,
+                    color: colors.text,
+                    fontWeight: 'bold'
+                  }}
+                  value={formData.username}
+                  onChangeText={(text) => setFormData({...formData, username: text})}
+                  placeholder="@cooluser"
+                  placeholderTextColor={colors.textTertiary}
+                />
+              </View>
             </View>
           </View>
           
-          {/* Bio */}
+          {/* Enhanced Bio */}
           <View>
-            <Text className="text-quaternary font-semibold mb-2 flex-row items-center">
-              <MaterialIcons name="text-snippet" size={16} color="#1E493B" style={{marginRight: 4}} />
-              Bio
+            <Text style={{
+              color: colors.textSecondary,
+              fontWeight: 'bold',
+              marginBottom: 12,
+              fontSize: 18
+            }}>
+              ✍️ Your Story
             </Text>
-            <TextInput
-              className="border border-primary rounded-xl py-3 px-4 text-base text-tertiary min-h-[80px] bg-primary/10 shadow-sm"
-              value={formData.bio}
-              onChangeText={(text) => setFormData({...formData, bio: text})}
-              multiline
-              numberOfLines={4}
-              placeholder="Tell your story..."
-              placeholderTextColor="#1E493B50"
-              textAlignVertical="top"
-            />
+            <View style={{
+              backgroundColor: colors.surface,
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: colors.border,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 8,
+              overflow: 'hidden'
+            }}>
+              <TextInput
+                style={{
+                  paddingVertical: 16,
+                  paddingHorizontal: 20,
+                  fontSize: 16,
+                  color: colors.text,
+                  minHeight: 100,
+                  fontWeight: 'bold'
+                }}
+                value={formData.bio}
+                onChangeText={(text) => setFormData({...formData, bio: text})}
+                multiline
+                numberOfLines={4}
+                placeholder="Tell the world what makes you unique..."
+                placeholderTextColor={colors.textTertiary}
+                textAlignVertical="top"
+              />
+            </View>
           </View>
 
-          {/* Section divider */}
-          <View className="flex-row items-center py-2">
-            <View className="flex-1 h-[1px] bg-primary" />
-            <Text className="px-4 text-quaternary font-semibold">YOUR VIBE</Text>
-            <View className="flex-1 h-[1px] bg-primary" />
+          {/* Enhanced Section divider */}
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 16
+          }}>
+            <View style={{
+              flex: 1,
+              height: 2,
+              backgroundColor: colors.accent, // aurora gradient equivalent
+              borderRadius: 1
+            }} />
+            <Text style={{
+              paddingHorizontal: 24,
+              color: colors.text,
+              fontWeight: 'bold',
+              fontSize: 18
+            }}>🌟 YOUR VIBE</Text>
+            <View style={{
+              flex: 1,
+              height: 2,
+              backgroundColor: colors.accent,
+              borderRadius: 1
+            }} />
           </View>
           
-          {/* Interests */}
+          {/* Enhanced Interests */}
           <View>
-            <Text className="text-quaternary font-semibold mb-2 flex-row items-center">
-              <MaterialIcons name="local-fire-department" size={16} color="#1E493B" style={{marginRight: 4}} />
-              Interests
+            <Text style={{
+              color: colors.textSecondary,
+              fontWeight: 'bold',
+              marginBottom: 16,
+              fontSize: 18
+            }}>
+              🔥 Interests & Passions
             </Text>
-            <View className="flex-row flex-wrap mb-3">
+            <View style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              marginBottom: 16
+            }}>
               {profile.interests?.map((interest, index) => (
-                <View key={index} className="bg-primary rounded-full px-3 py-1.5 m-1 flex-row items-center shadow-sm">
-                  <Text className="text-tertiary font-medium">{interest}</Text>
-                  <TouchableOpacity onPress={() => removeArrayItem(profile.id, 'interests', index)} className="ml-1">
-                    <MaterialIcons name="close" size={16} color="#1E493B" />
+                <View key={index} style={{
+                  backgroundColor: colors.electric, // cyber gradient equivalent
+                  borderRadius: 16,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  margin: 4,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 8
+                }}>
+                  <Text style={{
+                    color: 'white',
+                    fontWeight: 'bold',
+                    marginRight: 8
+                  }}>{interest}</Text>
+                  <TouchableOpacity onPress={() => removeArrayItem(profile.id, 'interests', index)}>
+                    <MaterialIcons name="close" size={18} color="white" />
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
-            <View className="flex-row items-center bg-primary/10 rounded-xl shadow-sm overflow-hidden border border-primary">
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: colors.surface,
+              borderRadius: 24,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 8,
+              overflow: 'hidden',
+              borderWidth: 1,
+              borderColor: colors.border
+            }}>
               <TextInput
-                className="py-3 px-4 text-base text-tertiary flex-1"
+                style={{
+                  paddingVertical: 16,
+                  paddingHorizontal: 20,
+                  fontSize: 16,
+                  color: colors.text,
+                  flex: 1,
+                  fontWeight: 'bold'
+                }}
                 value={newInterest}
                 onChangeText={setNewInterest}
                 placeholder="Add an interest"
-                placeholderTextColor="#1E493B50"
+                placeholderTextColor={colors.textTertiary}
               />
               <TouchableOpacity 
-                className="bg-quaternary p-3 m-1 rounded-lg"
+                style={{
+                  backgroundColor: colors.electric,
+                  padding: 12,
+                  margin: 4,
+                  borderRadius: 16,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 8
+                }}
                 onPress={() => {
                   if (newInterest.trim()) {
                     addArrayItem(profile.id, 'interests', newInterest);
@@ -216,32 +437,89 @@ export default function EditProfile() {
             </View>
           </View>
           
-          {/* Travel History */}
+          {/* Enhanced Travel History */}
           <View>
-            <Text className="text-quaternary font-semibold mb-2 flex-row items-center">
-              <MaterialCommunityIcons name="map-marker-check" size={16} color="#1E493B" style={{marginRight: 4}} />
-              Travel History
+            <Text style={{
+              color: colors.textSecondary,
+              fontWeight: 'bold',
+              marginBottom: 16,
+              fontSize: 18
+            }}>
+              🗺️ Places You&rsquo;ve Conquered
             </Text>
-            <View className="flex-row flex-wrap mb-3">
+            <View style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              marginBottom: 16
+            }}>
               {profile.travelHistory?.map((place, index) => (
-                <View key={index} className="bg-secondary/70 rounded-full px-3 py-1.5 m-1 flex-row items-center">
-                  <Text className="text-tertiary font-medium">{place}</Text>
-                  <TouchableOpacity onPress={() => removeArrayItem(profile.id, 'travelHistory', index)} className="ml-1">
-                    <MaterialIcons name="close" size={16} color="#191D15" />
+                <View key={index} style={{
+                  backgroundColor: colors.backgroundSecondary, // aurora-teal equivalent
+                  borderRadius: 16,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  margin: 4,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 8,
+                  borderWidth: 1,
+                  borderColor: colors.border
+                }}>
+                  <Text style={{
+                    color: colors.text,
+                    fontWeight: 'bold',
+                    marginRight: 8
+                  }}>{place}</Text>
+                  <TouchableOpacity onPress={() => removeArrayItem(profile.id, 'travelHistory', index)}>
+                    <MaterialIcons name="close" size={18} color={colors.text} />
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
-            <View className="flex-row items-center bg-secondary/10 rounded-xl shadow-sm overflow-hidden border border-secondary/50">
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: colors.surface,
+              borderRadius: 24,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 8,
+              overflow: 'hidden',
+              borderWidth: 1,
+              borderColor: colors.border
+            }}>
               <TextInput
-                className="py-3 px-4 text-base text-tertiary flex-1"
+                style={{
+                  paddingVertical: 16,
+                  paddingHorizontal: 20,
+                  fontSize: 16,
+                  color: colors.text,
+                  flex: 1,
+                  fontWeight: 'bold'
+                }}
                 value={newTravelHistory}
                 onChangeText={setNewTravelHistory}
                 placeholder="Add a visited place"
-                placeholderTextColor="#1E493B50"
+                placeholderTextColor={colors.textTertiary}
               />
               <TouchableOpacity 
-                className="bg-secondary p-3 m-1 rounded-lg"
+                style={{
+                  backgroundColor: colors.cyber, // aurora-teal to digital-mint equivalent
+                  padding: 12,
+                  margin: 4,
+                  borderRadius: 16,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 8
+                }}
                 onPress={() => {
                   if (newTravelHistory.trim()) {
                     addArrayItem(profile.id, 'travelHistory', newTravelHistory);
@@ -249,37 +527,94 @@ export default function EditProfile() {
                   }
                 }}
               >
-                <MaterialIcons name="add" size={20} color="#191D15" />
+                <MaterialIcons name="add" size={20} color="white" />
               </TouchableOpacity>
             </View>
           </View>
           
-          {/* Travel Goals */}
+          {/* Enhanced Travel Goals */}
           <View>
-            <Text className="text-quaternary font-semibold mb-2 flex-row items-center">
-              <MaterialCommunityIcons name="map-marker-path" size={16} color="#1E493B" style={{marginRight: 4}} />
-              Travel Goals
+            <Text style={{
+              color: colors.textSecondary,
+              fontWeight: 'bold',
+              marginBottom: 16,
+              fontSize: 18
+            }}>
+              🎯 Dream Destinations
             </Text>
-            <View className="flex-row flex-wrap mb-3">
+            <View style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              marginBottom: 16
+            }}>
               {profile.travelGoals?.map((goal, index) => (
-                <View key={index} className="bg-primary/60 rounded-full px-3 py-1.5 m-1 flex-row items-center">
-                  <Text className="text-tertiary font-medium">{goal}</Text>
-                  <TouchableOpacity onPress={() => removeArrayItem(profile.id, 'travelGoals', index)} className="ml-1">
-                    <MaterialIcons name="close" size={16} color="#1E493B" />
+                <View key={index} style={{
+                  backgroundColor: colors.backgroundSecondary, // sunset-peach equivalent
+                  borderRadius: 16,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  margin: 4,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 8,
+                  borderWidth: 1,
+                  borderColor: colors.border
+                }}>
+                  <Text style={{
+                    color: colors.text,
+                    fontWeight: 'bold',
+                    marginRight: 8
+                  }}>{goal}</Text>
+                  <TouchableOpacity onPress={() => removeArrayItem(profile.id, 'travelGoals', index)}>
+                    <MaterialIcons name="close" size={18} color={colors.text} />
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
-            <View className="flex-row items-center bg-primary/10 rounded-xl shadow-sm overflow-hidden border border-primary/50">
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: colors.surface,
+              borderRadius: 24,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 8,
+              overflow: 'hidden',
+              borderWidth: 1,
+              borderColor: colors.border
+            }}>
               <TextInput
-                className="py-3 px-4 text-base text-tertiary flex-1"
+                style={{
+                  paddingVertical: 16,
+                  paddingHorizontal: 20,
+                  fontSize: 16,
+                  color: colors.text,
+                  flex: 1,
+                  fontWeight: 'bold'
+                }}
                 value={newTravelGoal}
                 onChangeText={setNewTravelGoal}
                 placeholder="Add a travel goal"
-                placeholderTextColor="#1E493B50"
+                placeholderTextColor={colors.textTertiary}
               />
               <TouchableOpacity 
-                className="bg-quaternary p-3 m-1 rounded-lg"
+                style={{
+                  backgroundColor: colors.warning, // sunset-peach to neon-coral equivalent
+                  padding: 12,
+                  margin: 4,
+                  borderRadius: 16,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 8
+                }}
                 onPress={() => {
                   if (newTravelGoal.trim()) {
                     addArrayItem(profile.id, 'travelGoals', newTravelGoal);
@@ -292,38 +627,154 @@ export default function EditProfile() {
             </View>
           </View>
           
-          {/* Premium Status - Enhanced */}
-          {profile?.isPremium && (
-            <View className="bg-secondary/20 p-5 rounded-xl mt-6 shadow-sm border border-secondary border-opacity-40 backdrop-blur-sm">
-              <View className="flex-row items-center">
-                <MaterialIcons name="star" size={24} color="#E3AF00" />
-                <Text className="ml-2 text-lg font-bold text-tertiary">Premium Account</Text>
+          {/* Enhanced Status Cards Section */}
+          <View style={{ gap: 16, marginTop: 32 }}>
+            {/* Premium Status - Enhanced with gradients */}
+            {profile?.isPremium && (
+              <View style={{
+                backgroundColor: colors.electric, // cosmic gradient equivalent
+                borderRadius: 24,
+                padding: 24,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.4,
+                shadowRadius: 12,
+                elevation: 12,
+                borderWidth: 1,
+                borderColor: colors.accent
+              }}>
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 8
+                }}>
+                  <View style={{
+                    backgroundColor: colors.accent, // aurora gradient equivalent
+                    padding: 8,
+                    borderRadius: 16,
+                    marginRight: 12
+                  }}>
+                    <MaterialIcons name="star" size={20} color="white" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{
+                      fontSize: 20,
+                      fontWeight: 'bold',
+                      color: 'white'
+                    }}>Premium Traveler ⭐</Text>
+                    <Text style={{
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      fontWeight: '500'
+                    }}>Unlock the world with exclusive features</Text>
+                  </View>
+                </View>
+                <View style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  borderRadius: 16,
+                  padding: 12,
+                  marginTop: 12
+                }}>
+                  <Text style={{
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    fontSize: 14,
+                    fontWeight: '500'
+                  }}>✨ Unlimited itineraries • 🌟 Priority support • 🎯 AI recommendations</Text>
+                </View>
               </View>
-              <Text className="text-quaternary mt-1">You have access to all premium features</Text>
-            </View>
-          )}
-          
-          {/* Newsletter Status */}
-          {profile?.isSubscribed && (
-            <View className="bg-primary/20 p-4 rounded-lg border border-primary border-opacity-40 backdrop-blur-sm">
-              <View className="flex-row items-center">
-                <MaterialIcons name="check-circle" size={24} color="#1E493B" />
-                <Text className="ml-2 text-lg font-medium text-tertiary">Subscribed</Text>
+            )}
+            
+            {/* Newsletter Status - Enhanced */}
+            {profile?.isSubscribed && (
+              <View style={{
+                backgroundColor: colors.backgroundSecondary, // digital-mint/aurora-teal equivalent
+                borderRadius: 24,
+                padding: 24,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 8,
+                borderWidth: 1,
+                borderColor: colors.border
+              }}>
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center'
+                }}>
+                  <View style={{
+                    backgroundColor: colors.cyber, // digital-mint to aurora-teal equivalent
+                    padding: 8,
+                    borderRadius: 16,
+                    marginRight: 12
+                  }}>
+                    <MaterialIcons name="check-circle" size={20} color="white" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{
+                      fontSize: 20,
+                      fontWeight: 'bold',
+                      color: colors.text
+                    }}>Newsletter Insider 📮</Text>
+                    <Text style={{
+                      color: colors.textSecondary,
+                      fontWeight: '500'
+                    }}>Stay updated with travel trends & deals</Text>
+                  </View>
+                </View>
               </View>
-              <Text className="text-quaternary mt-1">You&rsquo;re subscribed to our newsletter</Text>
-            </View>
-          )}
+            )}
+          </View>
           
-          {/* Save Button */}
-          <View className="my-8">
+          {/* Enhanced Save Button */}
+          <View style={{ marginVertical: 40 }}>
             <TouchableOpacity
-              className="bg-quaternary py-4 rounded-xl items-center shadow-lg"
+              style={{
+                borderRadius: 24,
+                overflow: 'hidden',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.4,
+                shadowRadius: 12,
+                elevation: 12,
+                opacity: isLoading ? 0.7 : 1
+              }}
               onPress={handleSave}
               disabled={isLoading}
             >
-              <Text className="text-quinary font-bold text-lg">
-                {isLoading ? 'Saving...' : 'Save Your Vibe ✨'}
-              </Text>
+              <LinearGradient
+                colors={isLoading ? [colors.textTertiary, colors.textSecondary] : [colors.neon, colors.success]}
+                style={{
+                  paddingVertical: 20,
+                  paddingHorizontal: 32,
+                  alignItems: 'center'
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {isLoading ? (
+                    <>
+                      <MaterialIcons name="hourglass-empty" size={24} color="white" style={{ marginRight: 12 }} />
+                      <Text style={{
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: 20,
+                        letterSpacing: 1,
+                        marginLeft: 12
+                      }}>SAVING VIBE...</Text>
+                    </>
+                  ) : (
+                    <>
+                      <MaterialIcons name="rocket-launch" size={24} color="white" style={{ marginRight: 12 }} />
+                      <Text style={{
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: 20,
+                        letterSpacing: 1,
+                        marginLeft: 12
+                      }}>SAVE YOUR VIBE ✨</Text>
+                    </>
+                  )}
+                </View>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         </View>

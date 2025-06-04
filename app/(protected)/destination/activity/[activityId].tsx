@@ -1,40 +1,41 @@
-import { 
-  View, 
-  Text, 
-  SafeAreaView, 
-  ScrollView,  
-  Image, 
-  Linking,
-  TouchableOpacity,
-} from 'react-native';
-import { Stack, useLocalSearchParams, router } from 'expo-router';
+import React, { useMemo, useCallback } from 'react';
+import { View, Text, ScrollView, SafeAreaView, Image, TouchableOpacity, Linking, Alert } from 'react-native';
+import { useLocalSearchParams, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInUp, FadeInLeft, FadeInRight, SlideInDown } from 'react-native-reanimated';
 import { useItineraryStore } from '~/store/itinerary/ItineraryStore';
-import type { Activity } from '~/types/planner.types';
-import {
-  LandmarkActivity,
-  FoodActivity,
-  AccommodationActivity,
-  RecreationalActivity
-} from '~/components/destination/activity-types';
+import { useTheme } from '~/contexts/ThemeContext';
 
 interface RatingVisualizerProps {
   rating: number;
 }
 
-// Custom rating visualizer component
 const RatingVisualizer: React.FC<RatingVisualizerProps> = ({ rating }) => {
+  const { colors } = useTheme();
+  
   return (
-    <View className="flex-row items-center">
-      <View className="w-28 h-3 bg-gray-200 rounded-full overflow-hidden">
-        <View 
-          className="h-full bg-amber-400" 
-          style={{ width: `${Math.min(rating * 20, 100)}%` }} 
+    <Animated.View 
+      entering={FadeInLeft.delay(800).duration(600)}
+      style={{ flexDirection: 'row', alignItems: 'center' }}
+    >
+      {[1, 2, 3, 4, 5].map((star) => (
+        <MaterialIcons
+          key={star}
+          name={star <= rating ? 'star' : 'star-border'}
+          size={20}
+          color={star <= rating ? colors.warning : colors.textSecondary} // colors.warning for filled stars
+          style={{ marginRight: 4 }}
         />
-      </View>
-      <Text className="ml-3 text-amber-500 font-bold">{rating.toFixed(1)}</Text>
-    </View>
+      ))}
+      <Text style={{ 
+        marginLeft: 8, 
+        fontWeight: '600', 
+        color: colors.text // theme text color
+      }}>
+        {rating.toFixed(1)}
+      </Text>
+    </Animated.View>
   );
 };
 
@@ -42,247 +43,650 @@ interface AiRatingVisualizerProps {
   rating: number;
 }
 
-// AI Summary Rating visualizer
 const AiRatingVisualizer: React.FC<AiRatingVisualizerProps> = ({ rating }) => {
-  const colors: readonly [string, string] = rating > 80 ? ['#4ADE80', '#22C55E'] : 
-                                            rating > 60 ? ['#FBBF24', '#F59E0B'] :
-                                            ['#F87171', '#EF4444'];
+  const { colors } = useTheme();
+  
+  const gradientColors: readonly [string, string] = rating > 80 ? [colors.success, colors.neon] : // theme success/neon for high rating
+                                            rating > 60 ? [colors.warning, colors.warning] : // theme warning for medium rating
+                                            [colors.error, colors.error]; // theme error for low rating
                  
   return (
-    <View className="mt-5 mb-4 bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
-      <View className="flex-row items-center justify-between mb-1.5">
-        <Text className="text-gray-700 font-semibold">AI Recommendation Score</Text>
-        <Text className="font-bold text-base" style={{color: colors[1]}}>{rating}%</Text>
-      </View>
-      <View className="h-3.5 bg-gray-200 rounded-full overflow-hidden">
+    <Animated.View 
+      entering={FadeInRight.delay(1400).duration(600)}
+      style={{ alignItems: 'center' }}
+    >
+      <View style={{ 
+        width: 80, 
+        height: 80, 
+        borderRadius: 40, 
+        borderWidth: 4, 
+        borderColor: colors.border, // theme border color
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        marginBottom: 8 
+      }}>
         <LinearGradient
-          colors={colors}
-          start={{x: 0, y: 0}}
-          end={{x: 1, y: 0}}
-          className="h-full rounded-full"
-          style={{ width: `${rating}%` }}
-        />
+          colors={gradientColors}
+          style={{
+            width: 64, 
+            height: 64, 
+            borderRadius: 32, 
+            alignItems: 'center', 
+            justifyContent: 'center'
+          }}
+        >
+          <Text style={{ 
+            color: colors.textInverse, // theme inverse text color
+            fontWeight: 'bold', 
+            fontSize: 18 
+          }}>
+            {rating}
+          </Text>
+        </LinearGradient>
       </View>
-    </View>
+      <Text style={{ 
+        fontSize: 14, 
+        fontWeight: '500', 
+        color: colors.textSecondary // theme secondary text color
+      }}>
+        AI Score
+      </Text>
+    </Animated.View>
   );
-};
-
-const ActivityTypeSection: React.FC<{ activity: Activity }> = ({ activity }) => {
-  switch (activity.type) {
-    case 'landmark':
-      return <LandmarkActivity activity={activity} />;
-    case 'food':
-      return <FoodActivity activity={activity} />;
-    case 'accommodation':
-      return <AccommodationActivity activity={activity} />;
-    case 'activity':
-      return <RecreationalActivity activity={activity} />;
-    default:
-      return null;
-  }
 };
 
 const ActivityDetails = () => {
   const params = useLocalSearchParams();
-  const activityId = Array.isArray(params.activityId) 
-    ? params.activityId[0] 
-    : params.activityId || '';
+  const { colors } = useTheme();
+  
+  // Memoize the activityId to prevent unnecessary re-computations
+  const activityId = useMemo(() => {
+    return Array.isArray(params.activityId) 
+      ? params.activityId[0] 
+      : params.activityId || '';
+  }, [params.activityId]);
 
-  const { activity } = useItineraryStore(state => ({
-    activity: state.itinerary?.ItineraryDays
-      ?.flatMap(day => day.activitys)
-      .find(a => a.id === activityId)
-  }));
+  // Use separate selectors to prevent the object recreation issue
+  const itinerary = useItineraryStore(state => state.itinerary);
+  const toggleUpvote = useItineraryStore(state => state.toggleUpvote);
+  const toggleDownvote = useItineraryStore(state => state.toggleDownvote);
+  const upvoted = useItineraryStore(state => state.upvoted);
+  const downvoted = useItineraryStore(state => state.downvoted);
+
+  // Memoize the activity search to prevent recalculation
+  const activity = useMemo(() => {
+    if (!itinerary?.ItineraryDays || !activityId) return null;
+    
+    return itinerary.ItineraryDays
+      .flatMap(day => day.activitys)
+      .find(a => a.id === activityId) || null;
+  }, [itinerary?.ItineraryDays, activityId]);
+
+  // Type info function with theme colors
+  const getTypeInfo = (type: string) => {
+    switch (type) {
+      case 'landmark':
+        return { icon: 'location-city', color: colors.warning, label: 'Landmark', emoji: '🏛️' };
+      case 'food':
+        return { icon: 'restaurant', color: colors.error, label: 'Restaurant', emoji: '🍽️' };
+      case 'accommodation':
+        return { icon: 'hotel', color: colors.primary, label: 'Hotel', emoji: '🏨' };
+      case 'activity':
+        return { icon: 'directions-run', color: colors.success, label: 'Activity', emoji: '🏃' };
+      default:
+        return { icon: 'place', color: colors.textSecondary, label: 'Place', emoji: '📍' };
+    }
+  };
+
+  const handleOpenMaps = useCallback(() => {
+    if (!activity) return;
+    
+    const { lat, lng } = activity.location;
+    const url = `https://maps.google.com/?q=${lat},${lng}`;
+    
+    Linking.canOpenURL(url).then(supported => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        Alert.alert('Error', 'Cannot open maps application');
+      }
+    });
+  }, [activity]);
+
+  const handleUpvote = useCallback(() => {
+    if (activity) {
+      toggleUpvote(activity.id);
+    }
+  }, [activity, toggleUpvote]);
+
+  const handleDownvote = useCallback(() => {
+    if (activity) {
+      toggleDownvote(activity.id);
+    }
+  }, [activity, toggleDownvote]);
+
+  const handleBack = useCallback(() => {
+    router.back();
+  }, []);
 
   if (!activity) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-gray-100">
-        <View className="bg-white p-8 rounded-3xl shadow-md w-5/6 items-center">
-          <MaterialIcons name="search-off" size={60} color="#9CA3AF" />
-          <Text className="text-2xl font-bold text-gray-800 mt-4 mb-2">Oops, Nothing Found</Text>
-          <Text className="text-gray-500 text-center mb-8">We couldn&rsquo;t find the activity you&rsquo;re looking for.</Text>
-          <TouchableOpacity 
-            className="bg-indigo-500 py-4 px-8 rounded-full flex-row items-center"
-            onPress={() => router.back()}
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <Animated.View 
+          entering={FadeInUp.delay(200).duration(600)}
+          style={{ 
+            flex: 1, 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            padding: 24 
+          }}
+        >
+          <MaterialIcons name="error-outline" size={64} color={colors.textSecondary} />
+          <Text style={{ 
+            fontSize: 20, 
+            fontWeight: 'bold', 
+            marginTop: 16, 
+            marginBottom: 8, 
+            color: colors.text // theme text color
+          }}>
+            Activity Not Found
+          </Text>
+          <Text style={{ 
+            textAlign: 'center', 
+            marginBottom: 24, 
+            color: colors.textSecondary // theme secondary text color
+          }}>
+            The activity you&apos;re looking for doesn&apos;t exist or has been removed.
+          </Text>
+          <TouchableOpacity
+            onPress={handleBack}
+            style={{
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+              borderRadius: 9999, // rounded-full equivalent
+              backgroundColor: colors.primary // theme primary color
+            }}
           >
-            <MaterialIcons name="arrow-back" size={20} color="#FFF" />
-            <Text className="ml-2 text-white font-medium">Go Back</Text>
+            <Text style={{ 
+              color: colors.textInverse, // theme inverse text color
+              fontWeight: '600' 
+            }}>
+              Go Back
+            </Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </SafeAreaView>
     );
   }
 
-  const handleOpenMaps = () => {
-    const url = `https://www.google.com/maps/search/?api=1&query=${activity.location.lat},${activity.location.lng}`;
-    Linking.openURL(url);
-  };
-
-  const activityTypeColors: Record<string, [string, string, string]> = {
-    'landmark': ['#FEF3C7', '#F59E0B', '#92400E'],
-    'food': ['#FEE2E2', '#EF4444', '#991B1B'],
-    'accommodation': ['#E0E7FF', '#4F46E5', '#3730A3'],
-    'activity': ['#D1FAE5', '#10B981', '#065F46']
-  };
-  
-  const colors = activityTypeColors[activity.type] || ['#F3F4F6', '#6B7280', '#374151'];
+  const typeInfo = getTypeInfo(activity.type);
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <Stack.Screen options={{ headerShown: false }} />
-      
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Enhanced Header with Gradient Overlay */}
-        <View className="relative h-80">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Animated Header */}
+      <Animated.View 
+        entering={SlideInDown.delay(100).duration(600)}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 24,
+          paddingVertical: 16,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+          backgroundColor: colors.surface
+        }}
+      >
+        <TouchableOpacity 
+          style={{
+            backgroundColor: colors.cyber,
+            padding: 12,
+            borderRadius: 16,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 8
+          }}
+          onPress={handleBack}
+        >
+          <MaterialIcons name="arrow-back" size={20} color="white" />
+        </TouchableOpacity>
+        <Text style={{ 
+          fontSize: 24, 
+          fontWeight: 'bold',
+          textAlign: 'center',
+          flex: 1,
+          marginLeft: 16,
+          color: colors.text
+        }}>
+          Activity Details<Text style={{ color: colors.accent }}>.</Text>
+        </Text>
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.electric,
+            padding: 12,
+            borderRadius: 16,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 8
+          }}
+        >
+          <MaterialIcons name="share" size={20} color="white" />
+        </TouchableOpacity>
+      </Animated.View>
+
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        {/* Hero Image with Type Badge */}
+        <Animated.View 
+          entering={FadeInUp.delay(200).duration(800)}
+          style={{ position: 'relative' }}
+        >
           <Image
             source={{ uri: activity.imageUrl }}
-            className="w-full h-full"
+            style={{ width: '100%', height: 256 }}
             resizeMode="cover"
           />
           <LinearGradient
-            colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.7)']}
-            start={{x: 0, y: 0}}
-            end={{x: 0, y: 1}}
-            className="absolute inset-0"
+            colors={['transparent', 'rgba(0,0,0,0.3)']}
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 80
+            }}
           />
           
-          {/* Header Actions */}
-          <View className="absolute top-12 left-0 right-0 px-5 flex-row justify-between">
-            <TouchableOpacity
-              className="bg-white/95 rounded-full p-3 shadow-sm"
-              onPress={() => router.back()}
+          {/* Type Badge - Bottom Right Corner */}
+          <Animated.View 
+            entering={FadeInRight.delay(600).duration(700)}
+            style={{ position: 'absolute', bottom: 16, right: 16 }}
+          >
+            <LinearGradient
+              colors={[typeInfo.color, `${typeInfo.color}CC`]}
+              style={{
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                shadowColor: typeInfo.color,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 6,
+              }}
             >
-              <MaterialIcons name="arrow-back" size={24} color={colors[1]} />
-            </TouchableOpacity>
-            {/* Type Badge */}
-            <View className="flex-row">
-              <View 
-                className="px-4 py-2 rounded-full flex-row items-center shadow-sm"
-                style={{ backgroundColor: colors[0] }}
+              <Text style={{ 
+                color: colors.textInverse, // theme inverse text color
+                fontSize: 18, 
+                marginRight: 8 
+              }}>
+                {typeInfo.emoji}
+              </Text>
+              <View>
+                <Text style={{ 
+                  color: colors.textInverse, // theme inverse text color
+                  fontWeight: 'bold', 
+                  fontSize: 14 
+                }}>
+                  {typeInfo.label}
+                </Text>
+                <Text style={{ 
+                  color: 'rgba(255,255,255,0.8)', 
+                  fontSize: 12 
+                }}>
+                  {activity.type === 'food' ? 'Dining Experience' : 
+                   activity.type === 'landmark' ? 'Must-See Attraction' :
+                   activity.type === 'accommodation' ? 'Stay Option' : 'Experience'}
+                </Text>
+              </View>
+            </LinearGradient>
+          </Animated.View>
+        </Animated.View>
+
+        <View style={{ padding: 24 }}>
+          {/* Activity Title and Basic Info */}
+          <Animated.View 
+            entering={FadeInUp.delay(700).duration(600)}
+            style={{ marginBottom: 24 }}
+          >
+            <Animated.Text 
+              entering={FadeInLeft.delay(750).duration(500)}
+              style={{ 
+                fontSize: 24, 
+                fontWeight: 'bold', 
+                marginBottom: 8, 
+                color: colors.text // theme text color
+              }}
+            >
+              {activity.name}
+            </Animated.Text>
+            <Animated.Text 
+              entering={FadeInLeft.delay(800).duration(500)}
+              style={{ 
+                fontSize: 16, 
+                lineHeight: 24, 
+                marginBottom: 16, 
+                color: colors.textSecondary // theme secondary text color
+              }}
+            >
+              {activity.description}
+            </Animated.Text>
+            
+            {/* Rating and Cost */}
+            <Animated.View 
+              entering={FadeInUp.delay(850).duration(500)}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 16
+              }}
+            >
+              <RatingVisualizer rating={activity.rating} />
+              {activity.cost && (
+                <Animated.View 
+                  entering={FadeInRight.delay(900).duration(500)}
+                  style={{ flexDirection: 'row', alignItems: 'center' }}
+                >
+                  <MaterialIcons name="attach-money" size={20} color={colors.success} />
+                  <Text style={{ 
+                    fontSize: 20, 
+                    fontWeight: 'bold', 
+                    color: colors.success // theme success color
+                  }}>
+                    ${activity.cost}
+                  </Text>
+                </Animated.View>
+              )}
+            </Animated.View>
+          </Animated.View>
+
+          {/* Opening Hours & Tags - Side by Side */}
+          <Animated.View 
+            entering={FadeInUp.delay(1000).duration(600)}
+            style={{
+              flexDirection: 'row',
+              marginBottom: 24,
+              gap: 12
+            }}
+          >
+            {/* Opening Hours */}
+            {activity.openingHours && activity.openingHours.length > 0 && (
+              <Animated.View 
+                entering={FadeInLeft.delay(1100).duration(500)}
+                style={{
+                  flex: 1,
+                  borderRadius: 16,
+                  padding: 16,
+                  backgroundColor: colors.surface,
+                  borderWidth: 1,
+                  borderColor: colors.border
+                }}
+              >
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 12
+                }}>
+                  <MaterialIcons name="schedule" size={20} color={colors.primary} />
+                  <Text style={{ 
+                    fontSize: 16, 
+                    fontWeight: 'bold', 
+                    marginLeft: 8, 
+                    color: colors.text
+                  }}>
+                    Hours
+                  </Text>
+                </View>
+                {activity.openingHours.slice(0, 3).map((hours, index) => (
+                  <Text 
+                    key={index}
+                    style={{ 
+                      fontSize: 13, 
+                      marginBottom: 3, 
+                      color: colors.textSecondary,
+                      lineHeight: 16
+                    }}
+                  >
+                    {hours}
+                  </Text>
+                ))}
+                {activity.openingHours.length > 3 && (
+                  <Text style={{ 
+                    fontSize: 12, 
+                    color: colors.primary,
+                    fontWeight: '500',
+                    marginTop: 4
+                  }}>
+                    +{activity.openingHours.length - 3} more
+                  </Text>
+                )}
+              </Animated.View>
+            )}
+
+            {/* Tags */}
+            {activity.tags && activity.tags.length > 0 && (
+              <Animated.View 
+                entering={FadeInRight.delay(1100).duration(500)}
+                style={{
+                  flex: 1,
+                  borderRadius: 16,
+                  padding: 16,
+                  backgroundColor: colors.surface,
+                  borderWidth: 1,
+                  borderColor: colors.border
+                }}
+              >
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 12
+                }}>
+                  <MaterialIcons name="local-offer" size={20} color={colors.electric} />
+                  <Text style={{ 
+                    fontSize: 16, 
+                    fontWeight: 'bold', 
+                    marginLeft: 8, 
+                    color: colors.text
+                  }}>
+                    Tags
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {activity.tags.slice(0, 4).map((tag, index) => (
+                    <View 
+                      key={index}
+                      style={{
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 12,
+                        backgroundColor: colors.primary + '15',
+                        borderWidth: 1,
+                        borderColor: colors.primary + '30'
+                      }}
+                    >
+                      <Text style={{ 
+                        fontSize: 11, 
+                        color: colors.primary,
+                        fontWeight: '500'
+                      }}>
+                        #{tag}
+                      </Text>
+                    </View>
+                  ))}
+                  {activity.tags.length > 4 && (
+                    <View style={{
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      borderRadius: 12,
+                      backgroundColor: colors.textSecondary + '15'
+                    }}>
+                      <Text style={{ 
+                        fontSize: 11, 
+                        color: colors.textSecondary,
+                        fontWeight: '500'
+                      }}>
+                        +{activity.tags.length - 4}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </Animated.View>
+            )}
+          </Animated.View>
+
+          {/* AI Summary */}
+          {activity.AiSummary && (
+            <Animated.View 
+              entering={FadeInUp.delay(1600).duration(600)}
+              style={{
+                borderRadius: 16,
+                padding: 16,
+                marginBottom: 24,
+                backgroundColor: colors.surface // theme surface color
+              }}
+            >
+              <Animated.View 
+                entering={FadeInLeft.delay(1650).duration(500)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 12
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <MaterialIcons name="psychology" size={24} color={colors.electric} />
+                  <Text style={{ 
+                    fontSize: 18, 
+                    fontWeight: 'bold', 
+                    marginLeft: 12, 
+                    color: colors.text // theme text color
+                  }}>
+                    AI Insights
+                  </Text>
+                </View>
+                {activity.AiSummaryRating && (
+                  <AiRatingVisualizer rating={activity.AiSummaryRating} />
+                )}
+              </Animated.View>
+              <Animated.Text 
+                entering={FadeInUp.delay(1700).duration(500)}
+                style={{ 
+                  fontSize: 16, 
+                  lineHeight: 24, 
+                  color: colors.textSecondary // theme secondary text color
+                }}
+              >
+                {activity.AiSummary}
+              </Animated.Text>
+            </Animated.View>
+          )}
+
+          {/* Action Buttons */}
+          <Animated.View 
+            entering={FadeInUp.delay(1800).duration(600)}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              marginBottom: 24
+            }}
+          >
+            <Animated.View 
+              entering={FadeInLeft.delay(1850).duration(500)}
+              style={{ flex: 1, marginRight: 8 }}
+            >
+              <TouchableOpacity
+                onPress={handleUpvote}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingVertical: 12,
+                  borderRadius: 16,
+                  backgroundColor: upvoted[activity.id] ? colors.success + '33' : colors.surface // theme colors with transparency
+                }}
               >
                 <MaterialIcons 
-                  name={
-                    activity.type === 'landmark' ? 'location-city' : 
-                    activity.type === 'food' ? 'restaurant' :
-                    activity.type === 'accommodation' ? 'hotel' : 'directions-run'
-                  } 
-                  size={18} 
-                  color={colors[1]} 
+                  name="thumb-up" 
+                  size={20} 
+                  color={upvoted[activity.id] ? colors.success : colors.textSecondary} 
                 />
-                <Text className="ml-2 font-semibold capitalize" style={{ color: colors[2] }}>
-                  {activity.type}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Main Content - Curved Card Design */}
-        <View className="px-5 pb-10 -mt-8">
-          <View className="bg-white rounded-t-3xl p-4 pt-6 shadow-md">
-            {/* Title and Rating */}
-            <Text className="text-3xl font-bold text-gray-900 mb-3">
-              {activity.name}
-            </Text>
-            
-            <View className="flex-row items-center justify-between mb-5">
-              <View className="flex-row items-center">
-                <MaterialIcons name="star" size={22} color="#F59E0B" />
-                <Text className="ml-2 text-gray-700 font-medium">
-                  {activity.reviewsCount} reviews
-                </Text>
-              </View>
-              
-              <RatingVisualizer rating={activity.rating} />
-            </View>
-
-            {/* Description */}
-            <Text className="text-gray-700 mb-4 leading-6 text-base">
-              {activity.description}
-            </Text>
-
-            {/* Horizontal Cards Section - REDUCED VERTICAL SPACING */}
-            <View className="mb-2">
-              <Text className="font-semibold text-gray-900 mb-2">Activity Information</Text>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingRight: 20 }}
-                className="flex-row"
-              >
-                {/* Tags Card - MORE COMPACT */}
-                {activity.tags && activity.tags.length > 0 && (
-                  <View className="mr-3 bg-gray-50 p-3 rounded-2xl border border-gray-100" style={{ width: 220 }}>
-                    <View className="flex-row items-center mb-1">
-                      <MaterialIcons name="local-offer" size={18} color={colors[1]} />
-                      <Text className="ml-2 font-semibold text-gray-900">Tags</Text>
-                    </View>
-                    <View className="flex-row flex-wrap">
-                      {activity.tags.map((tag, index) => (
-                        <View 
-                          key={index} 
-                          className="mr-2 mb-1 px-3 py-1 rounded-full"
-                          style={{ backgroundColor: colors[0] }}
-                        >
-                          <Text style={{ color: colors[2] }} className="font-medium text-sm">#{tag}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                )}
-
-                {/* Opening Hours Card - MORE COMPACT */}
-                {activity.openingHours && (
-                  <View className="mr-3 bg-gray-50 p-3 rounded-2xl border border-gray-100" style={{ width: 220 }}>
-                    <View className="flex-row items-center mb-1">
-                      <MaterialIcons name="access-time" size={18} color={colors[1]} />
-                      <Text className="ml-2 font-semibold text-gray-900">
-                        {activity.type === 'accommodation' ? 'Check-in Times' : 'Opening Hours'}
-                      </Text>
-                    </View>
-                    <View>
-                      <Text className="text-gray-700 font-medium">
-                        {activity.openingHours.join(' - ')}
-                      </Text>
-                    </View>
-                  </View>
-                )}
-
-                {/* Location Card - MORE COMPACT */}
-                <TouchableOpacity 
-                  onPress={handleOpenMaps}
-                  className="bg-gray-50 p-3 rounded-2xl border border-gray-100"
-                  activeOpacity={0.7}
-                  style={{ width: 220 }}
+                <Text 
+                  style={{
+                    marginLeft: 8,
+                    fontWeight: '600',
+                    color: upvoted[activity.id] ? colors.success : colors.textSecondary
+                  }}
                 >
-                  <View className="flex-row items-center mb-1">
-                    <MaterialIcons name="location-on" size={18} color="#EF4444" />
-                    <Text className="ml-2 font-semibold text-gray-900">Location</Text>
-                  </View>
-                  <View className="flex-row items-center">
-                    <Text className="text-gray-700 font-medium flex-1">
-                      Tap to view on maps
-                    </Text>
-                    <MaterialIcons name="arrow-forward-ios" size={16} color="#9CA3AF" />
-                  </View>
-                </TouchableOpacity>
-              </ScrollView>
-            </View>
+                  Like ({activity.upvoteCount || 0})
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
 
-            {/* Separator - TIGHTENED WITH NEGATIVE MARGIN */}
-            <View className="h-px bg-gray-100 mt-0.5" />
+            <Animated.View 
+              entering={FadeInRight.delay(1900).duration(500)}
+              style={{ flex: 1, marginLeft: 8 }}
+            >
+              <TouchableOpacity
+                onPress={handleDownvote}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingVertical: 12,
+                  borderRadius: 16,
+                  backgroundColor: downvoted[activity.id] ? colors.error + '33' : colors.surface // theme colors with transparency
+                }}
+              >
+                <MaterialIcons 
+                  name="thumb-down" 
+                  size={20} 
+                  color={downvoted[activity.id] ? colors.error : colors.textSecondary} 
+                />
+                <Text 
+                  style={{
+                    marginLeft: 8,
+                    fontWeight: '600',
+                    color: downvoted[activity.id] ? colors.error : colors.textSecondary
+                  }}
+                >
+                  Dislike ({activity.downvoteCount || 0})
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </Animated.View>
 
-            {/* Enhanced Activity Type Section - INCREASED NEGATIVE MARGIN */}
-            <View className="-mt-16">
-              <ActivityTypeSection activity={activity} />
-            {/* AI Rating Visualizer */}
-            {activity.AiSummaryRating && (
-              <AiRatingVisualizer rating={activity.AiSummaryRating} />
-            )}
-            </View>
-            
-
-          </View>
+          {/* Location Button */}
+          <Animated.View entering={FadeInUp.delay(2000).duration(600)}>
+            <TouchableOpacity
+              onPress={handleOpenMaps}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingVertical: 16,
+                borderRadius: 16,
+                marginBottom: 24,
+                backgroundColor: colors.primary // theme primary color
+              }}
+            >
+              <MaterialIcons name="map" size={24} color={colors.textInverse} />
+              <Text style={{ 
+                color: colors.textInverse, // theme inverse text color
+                fontWeight: 'bold', 
+                fontSize: 18, 
+                marginLeft: 8 
+              }}>
+                Open in Maps
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
         </View>
       </ScrollView>
     </SafeAreaView>

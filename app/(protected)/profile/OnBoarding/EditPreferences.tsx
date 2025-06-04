@@ -3,8 +3,10 @@ import { View, Text, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useProfileStore, useCurrentProfile } from '~/store/ProfileStore';
 import Slider from '@react-native-community/slider';
+import { useTheme } from '~/contexts/ThemeContext';
 
 // Define types for the PreferenceChip props
 interface PreferenceChipProps {
@@ -14,114 +16,153 @@ interface PreferenceChipProps {
 }
 
 // Helper component for selection chips
-const PreferenceChip: React.FC<PreferenceChipProps> = ({ label, selected, onToggle }) => (
-  <TouchableOpacity
-    onPress={onToggle}
-    className={`mr-2 mb-2 px-3 py-2 rounded-full ${selected ? 'bg-teal-500' : 'bg-gray-200'}`}
-  >
-    <Text className={`${selected ? 'text-white' : 'text-gray-700'}`}>{label}</Text>
-  </TouchableOpacity>
-);
+const PreferenceChip: React.FC<PreferenceChipProps> = ({ label, selected, onToggle }) => {
+  const { colors } = useTheme();
+  
+  return (
+    <TouchableOpacity
+      onPress={onToggle}
+      style={{
+        marginRight: 12,
+        marginBottom: 12,
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 16,
+        shadowColor: colors.text,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+        backgroundColor: selected ? colors.cyber : colors.surface,
+        borderWidth: selected ? 0 : 1,
+        borderColor: selected ? 'transparent' : `${colors.border}33`,
+      }}
+    >
+      <Text style={{
+        fontWeight: 'bold',
+        color: selected ? colors.textInverse : colors.textSecondary
+      }}>{label}</Text>
+    </TouchableOpacity>
+  );
+};
 
-// Define the type for the preferences state
+// Define the type for the preferences state matching the new interface
 interface PreferencesState {
-  travelStyles: string[];
   preferredDestinations: string[];
+  travelStyles: string[];
+  preferredActivities: string[];
   budgetRange: { min: number; max: number };
   travelCompanions: string[];
   accommodationPreferences: string[];
+  transportationPreferences: string[];
+  dietaryRestrictions: string[];
+  accessibilityNeeds: string[];
+  languagePreferences: string[];
   ecoFriendlyPreferences: boolean;
 }
 
 export default function EditPreferences() {
-  const { updateProfile, isLoading } = useProfileStore();
+  const { updateTravelPreferences, isLoading } = useProfileStore();
   const profile = useCurrentProfile();
+  const { colors } = useTheme();
   
   const [preferences, setPreferences] = useState<PreferencesState>({
-    travelStyles: [],
     preferredDestinations: [],
+    travelStyles: [],
+    preferredActivities: [],
     budgetRange: { min: 1000, max: 5000 },
     travelCompanions: [],
     accommodationPreferences: [],
+    transportationPreferences: [],
+    dietaryRestrictions: [],
+    accessibilityNeeds: [],
+    languagePreferences: [],
     ecoFriendlyPreferences: false,
   });
   
   useEffect(() => {
     if (profile?.travelPreferences) {
       setPreferences({
-        travelStyles: profile.travelPreferences.travelStyles || [],
         preferredDestinations: profile.travelPreferences.preferredDestinations || [],
+        travelStyles: profile.travelPreferences.travelStyles || [],
+        preferredActivities: profile.travelPreferences.preferredActivities || [],
         budgetRange: profile.travelPreferences.budgetRange || { min: 1000, max: 5000 },
         travelCompanions: profile.travelPreferences.travelCompanions || [],
         accommodationPreferences: profile.travelPreferences.accommodationPreferences || [],
+        transportationPreferences: profile.travelPreferences.transportationPreferences || [],
+        dietaryRestrictions: profile.travelPreferences.dietaryRestrictions || [],
+        accessibilityNeeds: profile.travelPreferences.accessibilityNeeds || [],
+        languagePreferences: profile.travelPreferences.languagePreferences || [],
         ecoFriendlyPreferences: profile.travelPreferences.ecoFriendlyPreferences || false,
       });
     }
   }, [profile]);
 
-  const toggleStyle = (style: string) => {
-    setPreferences(prev => ({
-      ...prev,
-      travelStyles: prev.travelStyles.includes(style)
-        ? prev.travelStyles.filter(s => s !== style)
-        : [...prev.travelStyles, style]
-    }));
-  };
-
-  const toggleDestination = (destination: string) => {
-    setPreferences(prev => ({
-      ...prev,
-      preferredDestinations: prev.preferredDestinations.includes(destination)
-        ? prev.preferredDestinations.filter(d => d !== destination)
-        : [...prev.preferredDestinations, destination]
-    }));
-  };
-
-  const toggleCompanion = (companion: string) => {
-    setPreferences(prev => ({
-      ...prev,
-      travelCompanions: prev.travelCompanions.includes(companion)
-        ? prev.travelCompanions.filter(c => c !== companion)
-        : [...prev.travelCompanions, companion]
-    }));
-  };
-
-  const toggleAccommodation = (accommodation: string) => {
-    setPreferences(prev => ({
-      ...prev,
-      accommodationPreferences: prev.accommodationPreferences.includes(accommodation)
-        ? prev.accommodationPreferences.filter(a => a !== accommodation)
-        : [...prev.accommodationPreferences, accommodation]
-    }));
+  const toggleArrayPreference = (field: keyof PreferencesState, value: string) => {
+    setPreferences(prev => {
+      const currentArray = prev[field] as string[];
+      return {
+        ...prev,
+        [field]: currentArray.includes(value)
+          ? currentArray.filter(item => item !== value)
+          : [...currentArray, value]
+      };
+    });
   };
 
   const handleSave = () => {
     if (profile) {
-      updateProfile(profile.id, {
-        travelPreferences: {
-          ...profile.travelPreferences,
-          ...preferences
-        }
-      });
+      updateTravelPreferences(profile.id, preferences);
       router.back();
-      console.log('Preferences saved:', preferences);
+      console.log('Travel preferences saved:', preferences);
     }
   };
 
   // Sample options for different preferences
-  const styleOptions = ['Adventure', 'Relaxation', 'Cultural', 'Foodie', 'Trendy', 'Aesthetic'];
-  const destinationOptions = ['Beach', 'Mountains', 'City', 'Countryside', 'Volunteer', 'Work'];
-  const companionOptions = ['Solo', 'Partner', 'Family', 'Friends', 'Group'];
-  const accommodationOptions = ['Hotel', 'Hostel', 'Resort', 'Airbnb', 'Camping'];
+  const styleOptions = ['Adventure', 'Relaxation', 'Cultural', 'Foodie', 'Business', 'Wellness'];
+  const destinationOptions = ['Beach', 'Mountains', 'City', 'Countryside', 'Desert', 'Islands'];
+  const activityOptions = ['Hiking', 'Museums', 'Nightlife', 'Photography', 'Shopping', 'Food Tours'];
+  const companionOptions = ['Solo', 'Partner', 'Family', 'Friends', 'Group Tours', 'Business'];
+  const accommodationOptions = ['Hotel', 'Hostel', 'Resort', 'Airbnb', 'Camping', 'Luxury'];
+  const transportationOptions = ['Flight', 'Train', 'Car Rental', 'Bus', 'Cruise', 'Walking'];
+  const dietaryOptions = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Halal', 'Kosher', 'No Restrictions'];
+  const accessibilityOptions = ['Wheelchair Access', 'Visual Assistance', 'Hearing Assistance', 'Mobility Aid', 'Service Animal'];
+  const languageOptions = ['English', 'Spanish', 'French', 'German', 'Italian', 'Japanese', 'Mandarin'];
 
   if (!profile) {
     return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center">
-        <View className="p-6 rounded-lg items-center">
-          <MaterialIcons name="settings" size={48} color="#10b981" />
-          <Text className="text-lg font-medium mt-4 text-gray-700">Loading preferences...</Text>
-          <View className="h-2 w-40 bg-gray-200 rounded-full mt-4 overflow-hidden">
-            <View className="h-full bg-teal-500 rounded-full animate-pulse" style={{ width: '60%' }} />
+      <SafeAreaView style={{ 
+        flex: 1, 
+        backgroundColor: colors.background,
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <View style={{ 
+          padding: 24, 
+          borderRadius: 8, 
+          alignItems: 'center' 
+        }}>
+          <MaterialIcons name="settings" size={48} color={colors.success} />
+          <Text style={{ 
+            fontSize: 18, 
+            fontWeight: '500', 
+            marginTop: 16, 
+            color: colors.textSecondary 
+          }}>Loading preferences...</Text>
+          <View style={{ 
+            height: 8, 
+            width: 160, 
+            backgroundColor: colors.border, 
+            borderRadius: 9999, 
+            marginTop: 16, 
+            overflow: 'hidden' 
+          }}>
+            <View style={{ 
+              height: '100%', 
+              backgroundColor: colors.success, 
+              borderRadius: 9999, 
+              width: '60%' 
+            }} />
           </View>
         </View>
       </SafeAreaView>
@@ -129,96 +170,424 @@ export default function EditPreferences() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView style={{ 
+      flex: 1, 
+      backgroundColor: colors.background 
+    }}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      {/* Header */}
-      <View className="px-4 py-5 border-b border-gray-200 flex-row items-center">
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color="#333" />
+      {/* Modern Header */}
+      <View style={{
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: `${colors.border}80`,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.surface,
+      }}>
+        <TouchableOpacity 
+          style={{
+            backgroundColor: colors.cyber,
+            padding: 12,
+            borderRadius: 16,
+            shadowColor: colors.text,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 4,
+          }}
+          onPress={() => router.back()}
+        >
+          <MaterialIcons name="arrow-back" size={20} color={colors.textInverse} />
         </TouchableOpacity>
-        <Text className="text-xl font-medium text-center flex-1">Travel Preferences</Text>
-        <View style={{ width: 24 }} />
+        <Text style={{
+          fontSize: 24,
+          fontWeight: '900',
+          textAlign: 'center',
+          flex: 1,
+          marginLeft: 16,
+          color: colors.text
+        }}>
+          Your Vibe<Text style={{ color: colors.neon }}>.</Text>
+        </Text>
+        <View style={{ width: 44 }} />
       </View>
       
-      <ScrollView className="flex-1 px-4 pt-6">
+      <ScrollView 
+        style={{ flex: 1, paddingHorizontal: 24, paddingTop: 32 }} 
+        showsVerticalScrollIndicator={false}
+      >
         {/* Travel Styles */}
-        <View className="mb-8">
-          <Text className="text-lg font-semibold mb-3">Travel Style</Text>
-          <Text className="text-gray-600 mb-4">What kind of traveler are you?</Text>
-          <View className="flex-row flex-wrap">
+        <View style={{ marginBottom: 40 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{
+              backgroundColor: colors.cyber,
+              padding: 8,
+              borderRadius: 16,
+              marginRight: 12
+            }}>
+              <MaterialIcons name="explore" size={20} color={colors.textInverse} />
+            </View>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: '900',
+              color: colors.text
+            }}>Travel Style ✨</Text>
+          </View>
+          <Text style={{
+            color: colors.textSecondary,
+            marginBottom: 24,
+            fontSize: 18,
+            fontWeight: '500'
+          }}>What kind of traveler are you?</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
             {styleOptions.map(style => (
               <PreferenceChip
                 key={style}
                 label={style}
                 selected={preferences.travelStyles.includes(style)}
-                onToggle={() => toggleStyle(style)}
+                onToggle={() => toggleArrayPreference('travelStyles', style)}
               />
             ))}
           </View>
         </View>
         
         {/* Preferred Destinations */}
-        <View className="mb-8">
-          <Text className="text-lg font-semibold mb-3">Destinations</Text>
-          <Text className="text-gray-600 mb-4">What types of places do you like to visit?</Text>
-          <View className="flex-row flex-wrap">
+        <View style={{ marginBottom: 40 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{
+              backgroundColor: colors.electric,
+              padding: 8,
+              borderRadius: 16,
+              marginRight: 12
+            }}>
+              <MaterialIcons name="place" size={20} color={colors.textInverse} />
+            </View>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: '900',
+              color: colors.text
+            }}>Destinations 🌍</Text>
+          </View>
+          <Text style={{
+            color: colors.textSecondary,
+            marginBottom: 24,
+            fontSize: 18,
+            fontWeight: '500'
+          }}>What types of places call to you?</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
             {destinationOptions.map(destination => (
               <PreferenceChip
                 key={destination}
                 label={destination}
                 selected={preferences.preferredDestinations.includes(destination)}
-                onToggle={() => toggleDestination(destination)}
+                onToggle={() => toggleArrayPreference('preferredDestinations', destination)}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Preferred Activities */}
+        <View style={{ marginBottom: 40 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{
+              backgroundColor: colors.accent,
+              padding: 8,
+              borderRadius: 16,
+              marginRight: 12
+            }}>
+              <MaterialIcons name="local-activity" size={20} color={colors.textInverse} />
+            </View>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: '900',
+              color: colors.text
+            }}>Activities 🎯</Text>
+          </View>
+          <Text style={{
+            color: colors.textSecondary,
+            marginBottom: 24,
+            fontSize: 18,
+            fontWeight: '500'
+          }}>What activities excite you most?</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+            {activityOptions.map(activity => (
+              <PreferenceChip
+                key={activity}
+                label={activity}
+                selected={preferences.preferredActivities.includes(activity)}
+                onToggle={() => toggleArrayPreference('preferredActivities', activity)}
               />
             ))}
           </View>
         </View>
         
         {/* Travel Companions */}
-        <View className="mb-8">
-          <Text className="text-lg font-semibold mb-3">Travel Companions</Text>
-          <Text className="text-gray-600 mb-4">Who do you typically travel with?</Text>
-          <View className="flex-row flex-wrap">
+        <View style={{ marginBottom: 40 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{
+              backgroundColor: colors.neon,
+              padding: 8,
+              borderRadius: 16,
+              marginRight: 12
+            }}>
+              <MaterialIcons name="group" size={20} color={colors.textInverse} />
+            </View>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: '900',
+              color: colors.text
+            }}>Travel Squad 👥</Text>
+          </View>
+          <Text style={{
+            color: colors.textSecondary,
+            marginBottom: 24,
+            fontSize: 18,
+            fontWeight: '500'
+          }}>Who joins your adventures?</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
             {companionOptions.map(companion => (
               <PreferenceChip
                 key={companion}
                 label={companion}
                 selected={preferences.travelCompanions.includes(companion)}
-                onToggle={() => toggleCompanion(companion)}
+                onToggle={() => toggleArrayPreference('travelCompanions', companion)}
               />
             ))}
           </View>
         </View>
         
         {/* Accommodation Preferences */}
-        <View className="mb-8">
-          <Text className="text-lg font-semibold mb-3">Accommodation</Text>
-          <Text className="text-gray-600 mb-4">Where do you prefer to stay?</Text>
-          <View className="flex-row flex-wrap">
+        <View style={{ marginBottom: 40 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{
+              backgroundColor: colors.primary,
+              padding: 8,
+              borderRadius: 16,
+              marginRight: 12
+            }}>
+              <MaterialIcons name="hotel" size={20} color={colors.textInverse} />
+            </View>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: '900',
+              color: colors.text
+            }}>Stay Style 🏨</Text>
+          </View>
+          <Text style={{
+            color: colors.textSecondary,
+            marginBottom: 24,
+            fontSize: 18,
+            fontWeight: '500'
+          }}>Where do you love to rest?</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
             {accommodationOptions.map(accommodation => (
               <PreferenceChip
                 key={accommodation}
                 label={accommodation}
                 selected={preferences.accommodationPreferences.includes(accommodation)}
-                onToggle={() => toggleAccommodation(accommodation)}
+                onToggle={() => toggleArrayPreference('accommodationPreferences', accommodation)}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Transportation Preferences */}
+        <View style={{ marginBottom: 40 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{
+              backgroundColor: colors.warning,
+              padding: 8,
+              borderRadius: 16,
+              marginRight: 12
+            }}>
+              <MaterialIcons name="directions" size={20} color={colors.textInverse} />
+            </View>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: '900',
+              color: colors.text
+            }}>Transportation 🚗</Text>
+          </View>
+          <Text style={{
+            color: colors.textSecondary,
+            marginBottom: 24,
+            fontSize: 18,
+            fontWeight: '500'
+          }}>How do you prefer to get around?</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+            {transportationOptions.map(transport => (
+              <PreferenceChip
+                key={transport}
+                label={transport}
+                selected={preferences.transportationPreferences.includes(transport)}
+                onToggle={() => toggleArrayPreference('transportationPreferences', transport)}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Dietary Restrictions */}
+        <View style={{ marginBottom: 40 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{
+              backgroundColor: colors.success,
+              padding: 8,
+              borderRadius: 16,
+              marginRight: 12
+            }}>
+              <MaterialIcons name="restaurant" size={20} color={colors.textInverse} />
+            </View>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: '900',
+              color: colors.text
+            }}>Dietary Needs 🍽️</Text>
+          </View>
+          <Text style={{
+            color: colors.textSecondary,
+            marginBottom: 24,
+            fontSize: 18,
+            fontWeight: '500'
+          }}>Any dietary preferences or restrictions?</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+            {dietaryOptions.map(dietary => (
+              <PreferenceChip
+                key={dietary}
+                label={dietary}
+                selected={preferences.dietaryRestrictions.includes(dietary)}
+                onToggle={() => toggleArrayPreference('dietaryRestrictions', dietary)}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Accessibility Needs */}
+        <View style={{ marginBottom: 40 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{
+              backgroundColor: colors.secondary,
+              padding: 8,
+              borderRadius: 16,
+              marginRight: 12
+            }}>
+              <MaterialIcons name="accessible" size={20} color={colors.textInverse} />
+            </View>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: '900',
+              color: colors.text
+            }}>Accessibility ♿</Text>
+          </View>
+          <Text style={{
+            color: colors.textSecondary,
+            marginBottom: 24,
+            fontSize: 18,
+            fontWeight: '500'
+          }}>Any accessibility requirements?</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+            {accessibilityOptions.map(accessibility => (
+              <PreferenceChip
+                key={accessibility}
+                label={accessibility}
+                selected={preferences.accessibilityNeeds.includes(accessibility)}
+                onToggle={() => toggleArrayPreference('accessibilityNeeds', accessibility)}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Language Preferences */}
+        <View style={{ marginBottom: 40 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{
+              backgroundColor: colors.error,
+              padding: 8,
+              borderRadius: 16,
+              marginRight: 12
+            }}>
+              <MaterialIcons name="translate" size={20} color={colors.textInverse} />
+            </View>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: '900',
+              color: colors.text
+            }}>Languages 🗣️</Text>
+          </View>
+          <Text style={{
+            color: colors.textSecondary,
+            marginBottom: 24,
+            fontSize: 18,
+            fontWeight: '500'
+          }}>What languages do you speak?</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+            {languageOptions.map(language => (
+              <PreferenceChip
+                key={language}
+                label={language}
+                selected={preferences.languagePreferences.includes(language)}
+                onToggle={() => toggleArrayPreference('languagePreferences', language)}
               />
             ))}
           </View>
         </View>
         
         {/* Budget Range */}
-        <View className="mb-8">
-          <Text className="text-lg font-semibold mb-3">Budget Range</Text>
-          <Text className="text-gray-600 mb-4">What&rsquo;s your typical travel budget?</Text>
+        <View style={{ marginBottom: 40 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{
+              backgroundColor: colors.warning,
+              padding: 8,
+              borderRadius: 16,
+              marginRight: 12
+            }}>
+              <MaterialIcons name="attach-money" size={20} color={colors.textInverse} />
+            </View>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: '900',
+              color: colors.text
+            }}>Budget Range 💰</Text>
+          </View>
+          <Text style={{
+            color: colors.textSecondary,
+            marginBottom: 24,
+            fontSize: 18,
+            fontWeight: '500'
+          }}>What&rsquo;s your travel investment sweet spot?</Text>
           
-          <View className="mb-6">
-            <Text className="text-center text-gray-700 mb-4 text-lg font-medium">
+          <View style={{
+            backgroundColor: colors.surface,
+            borderRadius: 24,
+            padding: 24,
+            borderWidth: 1,
+            borderColor: `${colors.border}50`,
+            shadowColor: colors.text,
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.15,
+            shadowRadius: 24,
+            elevation: 8,
+            marginBottom: 24
+          }}>
+            <Text style={{
+              textAlign: 'center',
+              color: colors.text,
+              marginBottom: 24,
+              fontSize: 24,
+              fontWeight: '900'
+            }}>
               ${preferences.budgetRange.min} - ${preferences.budgetRange.max}
             </Text>
             
             {/* Min budget slider */}
-            <View className="mb-6">
-              <Text className="text-gray-600 mb-2">Minimum budget: ${preferences.budgetRange.min}</Text>
+            <View style={{ marginBottom: 24 }}>
+              <Text style={{
+                color: colors.textSecondary,
+                marginBottom: 12,
+                fontWeight: 'bold',
+                fontSize: 18
+              }}>Minimum budget: ${preferences.budgetRange.min}</Text>
               <Slider
                 minimumValue={500}
                 maximumValue={preferences.budgetRange.max - 500}
@@ -230,15 +599,20 @@ export default function EditPreferences() {
                     budgetRange: { ...prev.budgetRange, min: value }
                   }))
                 }
-                minimumTrackTintColor="#10b981"
-                maximumTrackTintColor="#ddd"
-                thumbTintColor="#10b981"
+                minimumTrackTintColor={colors.neon}
+                maximumTrackTintColor={colors.border}
+                thumbTintColor={colors.neon}
               />
             </View>
             
             {/* Max budget slider */}
             <View>
-              <Text className="text-gray-600 mb-2">Maximum budget: ${preferences.budgetRange.max}</Text>
+              <Text style={{
+                color: colors.textSecondary,
+                marginBottom: 12,
+                fontWeight: 'bold',
+                fontSize: 18
+              }}>Maximum budget: ${preferences.budgetRange.max}</Text>
               <Slider
                 minimumValue={preferences.budgetRange.min + 500}
                 maximumValue={10000}
@@ -250,47 +624,113 @@ export default function EditPreferences() {
                     budgetRange: { ...prev.budgetRange, max: value }
                   }))
                 }
-                minimumTrackTintColor="#10b981"
-                maximumTrackTintColor="#ddd"
-                thumbTintColor="#10b981"
+                minimumTrackTintColor={colors.error}
+                maximumTrackTintColor={colors.border}
+                thumbTintColor={colors.error}
               />
             </View>
           </View>
         </View>
         
         {/* Eco-Friendly Preferences */}
-        <View className="mb-8">
-          <View className="flex-row justify-between items-center">
-            <View>
-              <Text className="text-lg font-semibold">Eco-Friendly Travel</Text>
-              <Text className="text-gray-600 mt-1">Prefer sustainable options</Text>
+        <View style={{ marginBottom: 40 }}>
+          <View style={{
+            backgroundColor: colors.surface,
+            borderRadius: 24,
+            padding: 24,
+            borderWidth: 1,
+            borderColor: `${colors.border}50`,
+            shadowColor: colors.text,
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.15,
+            shadowRadius: 24,
+            elevation: 8,
+          }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <View style={{
+                    backgroundColor: colors.success,
+                    padding: 8,
+                    borderRadius: 16,
+                    marginRight: 12
+                  }}>
+                    <MaterialIcons name="eco" size={20} color={colors.textInverse} />
+                  </View>
+                  <Text style={{
+                    fontSize: 20,
+                    fontWeight: '900',
+                    color: colors.text
+                  }}>Eco-Friendly Travel 🌱</Text>
+                </View>
+                <Text style={{
+                  color: colors.textSecondary,
+                  fontWeight: '500',
+                  fontSize: 16
+                }}>Prefer sustainable & green options</Text>
+              </View>
+              <Switch
+                value={preferences.ecoFriendlyPreferences}
+                onValueChange={(value) => 
+                  setPreferences(prev => ({ ...prev, ecoFriendlyPreferences: value }))
+                }
+                trackColor={{ false: colors.border, true: colors.neon }}
+                thumbColor={preferences.ecoFriendlyPreferences ? colors.textInverse : colors.textTertiary}
+              />
             </View>
-            <Switch
-              value={preferences.ecoFriendlyPreferences}
-              onValueChange={(value) => 
-                setPreferences(prev => ({ ...prev, ecoFriendlyPreferences: value }))
-              }
-              trackColor={{ false: "#ddd", true: "#10b981" }}
-            />
           </View>
         </View>
         
         {/* Save Button */}
         <TouchableOpacity
-          className={`py-4 rounded-full items-center mb-10 ${isLoading ? 'bg-gray-400' : 'bg-teal-500'}`}
+          style={{
+            borderRadius: 24,
+            overflow: 'hidden',
+            marginBottom: 40,
+            shadowColor: colors.text,
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.15,
+            shadowRadius: 24,
+            elevation: 8,
+            opacity: isLoading ? 0.7 : 1
+          }}
           onPress={handleSave}
           disabled={isLoading}
         >
-          <View className="flex-row items-center justify-center">
-            {isLoading ? (
-              <Text className="text-white font-bold text-lg">Saving...</Text>
-            ) : (
-              <>
-                <MaterialIcons name="check" size={22} color="white" style={{ marginRight: 8 }} />
-                <Text className="text-white font-bold text-lg">Save Preferences</Text>
-              </>
-            )}
-          </View>
+          <LinearGradient
+            colors={isLoading ? [colors.textTertiary, colors.textSecondary] : [colors.neon, colors.success]}
+            style={{
+              paddingVertical: 20,
+              paddingHorizontal: 32,
+              alignItems: 'center'
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {isLoading ? (
+                <>
+                  <MaterialIcons name="hourglass-empty" size={24} color={colors.textInverse} style={{ marginRight: 12 }} />
+                  <Text style={{
+                    color: colors.textInverse,
+                    fontWeight: '900',
+                    fontSize: 20,
+                    letterSpacing: 1,
+                    marginLeft: 12
+                  }}>SAVING...</Text>
+                </>
+              ) : (
+                <>
+                  <MaterialIcons name="check" size={24} color={colors.textInverse} style={{ marginRight: 12 }} />
+                  <Text style={{
+                    color: colors.textInverse,
+                    fontWeight: '900',
+                    fontSize: 20,
+                    letterSpacing: 1,
+                    marginLeft: 12
+                  }}>SAVE PREFERENCES ✨</Text>
+                </>
+              )}
+            </View>
+          </LinearGradient>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

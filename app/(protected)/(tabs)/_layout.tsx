@@ -6,18 +6,21 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#1E493B',
-        tabBarInactiveTintColor: '#6B7280',
+        headerShown: false,
         tabBarStyle: {
           elevation: 0,
           borderTopWidth: 1,
-          borderTopColor: '#C6E7E3',
+          borderTopColor: 'rgba(99, 102, 241, 0.1)', // Subtle primary color border
           height: 64,
           paddingBottom: 18,
           paddingTop: 6,
           backgroundColor: '#FFFFFF',
+          // Add subtle gradient background
+          shadowColor: '#6366F1',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
         },
-        headerShown: false,
       }}
     >
       <Tabs.Screen

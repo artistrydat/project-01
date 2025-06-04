@@ -36,6 +36,14 @@ interface ItineraryState {
   // New properties for favorite itineraries
   favoriteItineraries: ititerary[];
   fetchUserFavoriteItineraries: (userId: string) => Promise<void>;
+  // New search and filter functions
+  searchItineraries: (query: string) => ititerary[];
+  searchItinerariesByCategory: (category: string) => ititerary[];
+  fetchSharedDestinations: () => ititerary[];
+  fetchPopularDestinations: () => ititerary[];
+  // New function for filtering landmark activities with high ratings
+  getHighRatedLandmarks: () => Activity[];
+  getHighRatedLandmarksByItinerary: (itineraryId: string) => Activity[];
 }
 
 export const useItineraryStore = create<ItineraryState & ActivityState>((set, get) => ({
@@ -260,15 +268,30 @@ export const useItineraryStore = create<ItineraryState & ActivityState>((set, ge
   // Fetch itineraries for a specific user (itineraries created by the user)
   fetchUserItineraries: async (userId: string) => {
     console.log(`[ItineraryStore] Fetching itineraries created by user: ${userId}`);
+    console.log(`[ItineraryStore] Available user profiles:`, Object.keys(mockUserProfile));
     set({ isLoading: true, error: null });
+    
     try {
-      // Mock implementation - replace with actual API call
-      const userItineraries = Object.values(mockititerarys).filter(
-        itinerary => itinerary.userId === userId
-      );
+      // Get user profile to access the user's itinerary list
+      const userProfile = mockUserProfile[userId];
       
-      console.log(`[ItineraryStore] Found ${userItineraries.length} itineraries created by user ${userId}`);
-      console.log('[ItineraryStore] Itinerary IDs:', userItineraries.map(it => it.ititeraryId));
+      if (!userProfile) {
+        console.warn(`[ItineraryStore] User profile not found for ID: ${userId}`);
+        console.log(`[ItineraryStore] Available profiles: ${Object.keys(mockUserProfile).join(', ')}`);
+        throw new Error(`User profile not found for ID: ${userId}`);
+      }
+      
+      // Get the list of itinerary IDs that belong to this user
+      const userItineraryIds = userProfile.itineraries || [];
+      console.log(`[ItineraryStore] User has ${userItineraryIds.length} itinerary IDs: ${userItineraryIds.join(', ')}`);
+      
+      // Fetch all user itineraries by ID from the main itineraries collection
+      const userItineraries = userItineraryIds
+        .map(id => mockititerarys[id])
+        .filter(Boolean); // Remove any undefined/null entries
+  
+      console.log(`[ItineraryStore] Successfully fetched ${userItineraries.length} user itineraries`);
+      console.log('[ItineraryStore] User Itinerary IDs:', userItineraries.map(it => it.ititeraryId));
       
       set({ userItineraries, isLoading: false });
     } catch (error) {
@@ -297,29 +320,35 @@ export const useItineraryStore = create<ItineraryState & ActivityState>((set, ge
     }
   },
 
-  // Fetch favorite itineraries for a specific user (using the user's profile data)
+  // Fetch favorite itineraries for a specific user (itineraries the user has favorited)
   fetchUserFavoriteItineraries: async (userId: string) => {
     console.log(`[ItineraryStore] Fetching favorite itineraries for user: ${userId}`);
+    console.log(`[ItineraryStore] Available user profiles:`, Object.keys(mockUserProfile));
     set({ isLoading: true, error: null });
+    
     try {
       // Get user profile to access the favorite itineraries list
       const userProfile = mockUserProfile[userId];
       
       if (!userProfile) {
         console.warn(`[ItineraryStore] User profile not found for ID: ${userId}`);
+        console.log(`[ItineraryStore] Available profiles: ${Object.keys(mockUserProfile).join(', ')}`);
         throw new Error(`User profile not found for ID: ${userId}`);
       }
       
       // Get the list of favorite itinerary IDs from the user profile
       const favoriteIds = userProfile.favoriteitineraries || [];
-      console.log(`[ItineraryStore] User has ${favoriteIds.length} favorite itineraries: ${favoriteIds.join(', ')}`);
+      console.log(`[ItineraryStore] User has ${favoriteIds.length} favorite itinerary IDs: ${favoriteIds.join(', ')}`);
       
-      // Fetch all favorite itineraries by ID
-      const favorites = favoriteIds.map(id => mockititerarys[id]).filter(Boolean);
+      // Fetch all favorite itineraries by ID from the main itineraries collection
+      const favoriteItineraries = favoriteIds
+        .map(id => mockititerarys[id])
+        .filter(Boolean); // Remove any undefined/null entries
+  
+      console.log(`[ItineraryStore] Successfully fetched ${favoriteItineraries.length} favorite itineraries`);
+      console.log('[ItineraryStore] Favorite Itinerary IDs:', favoriteItineraries.map(it => it.ititeraryId));
       
-      console.log(`[ItineraryStore] Successfully fetched ${favorites.length} favorite itineraries`);
-      
-      set({ favoriteItineraries: favorites, isLoading: false });
+      set({ favoriteItineraries, isLoading: false });
     } catch (error) {
       console.error(`[ItineraryStore] Error fetching favorite itineraries:`, error);
       set({ 
@@ -327,5 +356,88 @@ export const useItineraryStore = create<ItineraryState & ActivityState>((set, ge
         error: error instanceof Error ? error.message : 'Failed to fetch favorite itineraries' 
       });
     }
-  }
+  },
+
+  // NEW FUNCTIONS FOR SEARCH AND FILTERING
+
+  // Search itineraries by city or country
+  searchItineraries: (query: string) => {
+    if (!query.trim()) {
+      return Object.values(mockititerarys);
+    }
+    
+    const searchTerm = query.toLowerCase().trim();
+    return Object.values(mockititerarys).filter(itinerary => 
+      itinerary.city.toLowerCase().includes(searchTerm) ||
+      itinerary.country.toLowerCase().includes(searchTerm)
+    );
+  },
+
+  // Search itineraries by category (description)
+  searchItinerariesByCategory: (category: string) => {
+    if (!category.trim()) {
+      return Object.values(mockititerarys);
+    }
+    
+    const categoryTerm = category.toLowerCase().trim();
+    return Object.values(mockititerarys).filter(itinerary => 
+      itinerary.description.toLowerCase().includes(categoryTerm)
+    );
+  },
+
+  // Fetch shared destinations (isShared: true)
+  fetchSharedDestinations: () => {
+    console.log('[ItineraryStore] Fetching shared destinations');
+    const sharedDestinations = Object.values(mockititerarys).filter(
+      itinerary => itinerary.isShared === true
+    );
+    console.log(`[ItineraryStore] Found ${sharedDestinations.length} shared destinations`);
+    return sharedDestinations;
+  },
+
+  // Fetch popular destinations (isPublic: true)
+  fetchPopularDestinations: () => {
+    console.log('[ItineraryStore] Fetching popular destinations');
+    const popularDestinations = Object.values(mockititerarys).filter(
+      itinerary => itinerary.isPublic === true
+    );
+    console.log(`[ItineraryStore] Found ${popularDestinations.length} popular destinations`);
+    return popularDestinations;
+  },
+
+  // Get high-rated landmarks from the current itinerary
+  getHighRatedLandmarks: () => {
+    const { itinerary } = get();
+    if (!itinerary || !itinerary.ItineraryDays) return [];
+    
+    const highRatedLandmarks: Activity[] = [];
+    
+    itinerary.ItineraryDays.forEach(day => {
+      const landmarks = day.activitys.filter(
+        activity => activity.type === 'landmark' && activity.rating >= 4.5
+      );
+      highRatedLandmarks.push(...landmarks);
+    });
+    
+    console.log(`[ItineraryStore] Found ${highRatedLandmarks.length} high-rated landmarks in current itinerary`);
+    return highRatedLandmarks;
+  },
+
+  // Get high-rated landmarks from a specific itinerary by ID
+  getHighRatedLandmarksByItinerary: (itineraryId: string) => {
+    const targetItinerary = mockititerarys[itineraryId];
+    if (!targetItinerary || !targetItinerary.ItineraryDays) return [];
+    
+    const highRatedLandmarks: Activity[] = [];
+    
+    targetItinerary.ItineraryDays.forEach(day => {
+      const landmarks = day.activitys.filter(
+        activity => activity.type === 'landmark' && activity.rating >= 4.5
+      );
+      highRatedLandmarks.push(...landmarks);
+    });
+    
+    console.log(`[ItineraryStore] Found ${highRatedLandmarks.length} high-rated landmarks in itinerary ${itineraryId}`);
+    return highRatedLandmarks;
+  },
 }));

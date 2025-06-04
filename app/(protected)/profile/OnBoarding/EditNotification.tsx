@@ -1,17 +1,21 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Switch, Alert, SafeAreaView } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useProfileStore, useCurrentProfile } from '~/store/ProfileStore';
+import { useTheme } from '~/contexts/ThemeContext';
 
 const EditNotification = () => {
   const router = useRouter();
   const currentProfile = useCurrentProfile();
   const { updateNotificationSettings } = useProfileStore();
+  const { colors } = useTheme();
   
   if (!currentProfile || !currentProfile.notifications) {
     return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center">
-        <Text>Loading...</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ color: colors.text }}>Loading...</Text>
       </SafeAreaView>
     );
   }
@@ -39,16 +43,79 @@ const EditNotification = () => {
   };
 
   return (
-    <ScrollView className="flex-1 bg-white">
-      <Stack.Screen options={{ title: "Notification Settings" }} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.backgroundSecondary }}>
+      <Stack.Screen options={{ headerShown: false }} />
       
-      <View className="p-4">
-        <Text className="text-xl font-bold mb-4 text-tertiary">Notification Preferences</Text>
-        <Text className="text-gray-600 mb-6">
-          Choose which notifications you&rsquo;d like to receive
+      {/* Modern Header */}
+      <View style={{ 
+        paddingHorizontal: 24, 
+        paddingVertical: 16, 
+        borderBottomWidth: 1, 
+        borderBottomColor: colors.border + '80', // 50% opacity
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        backgroundColor: colors.surface 
+      }}>
+        <TouchableOpacity 
+          style={{ 
+            backgroundColor: colors.cyber, 
+            padding: 12, 
+            borderRadius: 16, 
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 5
+          }}
+          onPress={() => router.back()}
+        >
+          <MaterialIcons name="arrow-back" size={20} color="white" />
+        </TouchableOpacity>
+        <Text style={{ 
+          fontSize: 24, 
+          fontWeight: '900', 
+          textAlign: 'center', 
+          flex: 1, 
+          marginLeft: 16, 
+          color: colors.text 
+        }}>
+          Notifications<Text style={{ color: colors.neon }}>.</Text>
         </Text>
+        <View style={{ width: 44 }} />
+      </View>
+      
+      <ScrollView 
+        style={{ flex: 1, paddingHorizontal: 24, paddingTop: 32 }} 
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
+          <View style={{ 
+            backgroundColor: colors.cyber, 
+            padding: 8, 
+            borderRadius: 16, 
+            marginRight: 12 
+          }}>
+            <MaterialIcons name="notifications" size={20} color="white" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ 
+              fontSize: 24, 
+              fontWeight: '900', 
+              color: colors.text 
+            }}>
+              Stay in the Loop ✨
+            </Text>
+            <Text style={{ 
+              color: colors.textSecondary, 
+              fontSize: 18, 
+              fontWeight: '500' 
+            }}>
+              Choose what updates you want
+            </Text>
+          </View>
+        </View>
         
-        <View className="space-y-4">
+        <View>
           <NotificationItem
             label="New Messages"
             description="Get notified when you receive new messages"
@@ -85,14 +152,41 @@ const EditNotification = () => {
           />
         </View>
         
-        <TouchableOpacity 
-          className="mt-8 w-full py-2 px-4 bg-green-600 rounded-lg"
-          onPress={handleSavePreferences}
+        <LinearGradient
+          colors={[colors.neon, colors.cyber, colors.electric]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ 
+            marginTop: 32, 
+            borderRadius: 24, 
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+            elevation: 8
+          }}
         >
-          <Text className="text-white font-semibold text-center">Save Preferences</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <TouchableOpacity 
+            style={{ 
+              width: '100%', 
+              paddingVertical: 20, 
+              paddingHorizontal: 24, 
+              alignItems: 'center' 
+            }}
+            onPress={handleSavePreferences}
+          >
+            <Text style={{ 
+              color: 'white', 
+              fontWeight: '900', 
+              fontSize: 18, 
+              letterSpacing: 1 
+            }}>
+              Save Preferences ✨
+            </Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -104,18 +198,77 @@ interface NotificationItemProps {
 }
 
 const NotificationItem = ({ label, description, value, onToggle }: NotificationItemProps) => {
+  const { colors } = useTheme();
+  
   return (
-    <View className="flex-row items-start">
-      <View className="flex-1">
-        <Text className="font-medium text-gray-700">{label}</Text>
-        <Text className="text-gray-500">{description}</Text>
+    <View style={{ 
+      backgroundColor: colors.surface, 
+      borderRadius: 24, 
+      padding: 24, 
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 5,
+      borderWidth: 1, 
+      borderColor: colors.border + '33', // 20% opacity
+      marginBottom: 16 
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ flex: 1, marginRight: 16 }}>
+          <Text style={{ 
+            fontWeight: '900', 
+            fontSize: 20, 
+            color: colors.text, 
+            marginBottom: 8 
+          }}>
+            {label}
+          </Text>
+          <Text style={{ 
+            color: colors.textSecondary, 
+            fontSize: 16, 
+            fontWeight: '500', 
+            lineHeight: 24 
+          }}>
+            {description}
+          </Text>
+        </View>
+        <View style={{ position: 'relative' }}>
+          <Switch
+            value={value}
+            onValueChange={onToggle}
+            trackColor={{ 
+              false: colors.border, 
+              true: value ? colors.neon : colors.success 
+            }}
+            thumbColor="#ffffff"
+            ios_backgroundColor={colors.border}
+            style={{
+              transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }],
+              shadowColor: value ? colors.neon : '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: value ? 0.3 : 0.1,
+              shadowRadius: 4,
+            }}
+          />
+          {value && (
+            <View style={{ 
+              position: 'absolute', 
+              top: -4, 
+              right: -4, 
+              width: 12, 
+              height: 12, 
+              backgroundColor: colors.neon, 
+              borderRadius: 6, 
+              shadowColor: colors.neon,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.5,
+              shadowRadius: 4,
+              elevation: 3
+            }} />
+          )}
+        </View>
       </View>
-      <Switch
-        value={value}
-        onValueChange={onToggle}
-        trackColor={{ false: '#d1d5db', true: '#10b981' }}
-        thumbColor="#ffffff"
-      />
     </View>
   );
 };
