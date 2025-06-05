@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, SafeAreaView, Pressable, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { MaterialIcons, Entypo } from '@expo/vector-icons';
 import { useAuthStore } from '~/contexts/AuthContext';
 import { useProfileStore, useCurrentProfile } from '~/store/ProfileStore';
-import { useItineraryStore } from '~/store/itinerary/ItineraryStore';
 import { format } from 'date-fns';
 import { useTheme } from '~/contexts/ThemeContext';
 import ProfileHeader from '~/components/profile/ProfileHeader';
@@ -21,7 +20,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   
   // Get profile store functions and state
-  const { fetchProfile, profiles, currentProfileId, isLoading } = useProfileStore();
+  const { fetchProfile, currentProfileId, isLoading } = useProfileStore();
   const profile = useCurrentProfile();
   
   // State management

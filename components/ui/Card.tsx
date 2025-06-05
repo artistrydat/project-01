@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Pressable, ViewStyle } from 'react-native';
+import { View, Pressable, ViewStyle, Text } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 
 interface CardProps {
@@ -21,6 +21,22 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   const { colors } = useTheme();
   
+  // Recursively wrap any text nodes in Text components
+  const renderChildren = (child: React.ReactNode): React.ReactNode => {
+    if (typeof child === 'string' || typeof child === 'number') {
+      return <Text style={{ color: colors.text }}>{child}</Text>;
+    }
+    
+    if (React.isValidElement(child) && child.props && typeof child.props === 'object' && 'children' in child.props) {
+      return React.cloneElement(child, {
+        ...(child.props as any),
+        children: React.Children.map((child.props as any).children, renderChildren)
+      });
+    }
+    
+    return child;
+  };
+
   // Get size styles
   const getSizeStyles = () => {
     switch (size) {
@@ -58,9 +74,9 @@ export const Card: React.FC<CardProps> = ({
         };
       case 'glass':
         return {
-          backgroundColor: `${colors.surface}CC`, // glass-morphism with transparency
+          backgroundColor: `${colors.surface}CC`,
           borderWidth: 1,
-          borderColor: `${colors.border}66`, // border with transparency
+          borderColor: `${colors.border}66`,
           shadowColor: colors.shadow,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.1,
@@ -87,6 +103,8 @@ export const Card: React.FC<CardProps> = ({
     ...style,
   };
 
+  const processedChildren = React.Children.map(children, renderChildren);
+
   if (onPress) {
     return (
       <Pressable
@@ -99,14 +117,14 @@ export const Card: React.FC<CardProps> = ({
           },
         ]}
       >
-        {children}
+        {processedChildren}
       </Pressable>
     );
   }
 
   return (
     <View style={cardStyles}>
-      {children}
+      {processedChildren}
     </View>
   );
 };
