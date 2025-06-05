@@ -51,7 +51,6 @@ function QuestCard({ quest, questProgress, onPress, variant = 'default' }: Quest
     switch (quest.activityType) {
       case 'message_sent': return 'Auto-tracked from messages';
       case 'question_answered': return 'Auto-tracked from Q&A';
-      case 'photo_shared': return 'Auto-tracked from photos';
       case 'event_joined': return 'Auto-tracked from events';
       case 'recommendation_given': return 'Auto-tracked from recommendations';
       case 'room_joined': return 'Auto-tracked from room visits';

@@ -156,9 +156,6 @@ export const useQuestStore = create<QuestState>()(
                 case 'question_answered':
                   updatedActivityData.questionsAnswered = (updatedActivityData.questionsAnswered || 0) + 1;
                   break;
-                case 'photo_shared':
-                  updatedActivityData.photosShared = (updatedActivityData.photosShared || 0) + 1;
-                  break;
                 case 'event_joined':
                   updatedActivityData.eventsJoined = (updatedActivityData.eventsJoined || 0) + 1;
                   break;

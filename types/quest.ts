@@ -29,7 +29,6 @@ export interface UserQuestProgress {
   activityData?: {
     messagesSent?: number;
     questionsAnswered?: number;
-    photosShared?: number;
     eventsJoined?: number;
     recommendationsGiven?: number;
     roomsJoined?: number;
@@ -104,7 +103,7 @@ export const mockQuests: Quest[] = [
     }
   },
   {
-    id: '4',
+    id: '3',
     title: 'Community Leader',
     description: 'Give 50 recommendations to other travelers',
     points: 150,
@@ -121,7 +120,7 @@ export const mockQuests: Quest[] = [
     }
   },
   {
-    id: '5',
+    id: '4',
     title: 'Room Hopper',
     description: 'Join 8 different community rooms',
     points: 60,
@@ -137,7 +136,7 @@ export const mockQuests: Quest[] = [
     }
   },
   {
-    id: '6',
+    id: '5',
     title: 'Local Culture Enthusiast',
     description: 'Join 3 local cultural events',
     points: 120,
@@ -154,7 +153,7 @@ export const mockQuests: Quest[] = [
     }
   },
   {
-    id: '7',
+    id: '6',
     title: 'Daily Explorer',
     description: 'Be active for 7 consecutive days',
     points: 100,
@@ -170,7 +169,7 @@ export const mockQuests: Quest[] = [
     }
   },
   {
-    id: '8',
+    id: '7',
     title: 'Reaction Master',
     description: 'Give 30 reactions to helpful messages',
     points: 30,
